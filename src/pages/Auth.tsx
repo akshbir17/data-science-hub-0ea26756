@@ -27,11 +27,17 @@ const Auth = () => {
   // Admin form
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
-  const [adminName, setAdminName] = useState('');
 
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Reset to login when switching to admin tab
+  useEffect(() => {
+    if (activeTab === 'admin') {
+      setIsLogin(true);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (user) {
@@ -113,29 +119,13 @@ const Auth = () => {
         return;
       }
 
-      if (isLogin) {
-        const { error } = await signIn(adminEmail, adminPassword);
-        if (error) {
-          toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
-        } else {
-          toast({ title: 'Welcome back!', description: 'Successfully logged in as admin.' });
-          navigate('/dashboard');
-        }
+      // Admin can only login, no signup
+      const { error } = await signIn(adminEmail, adminPassword);
+      if (error) {
+        toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
       } else {
-        const { error } = await signUp(adminEmail, adminPassword, {
-          full_name: adminName,
-          role: 'admin',
-        });
-        if (error) {
-          if (error.message.includes('already registered')) {
-            toast({ title: 'Account Exists', description: 'This email is already registered. Please login instead.', variant: 'destructive' });
-          } else {
-            toast({ title: 'Registration Failed', description: error.message, variant: 'destructive' });
-          }
-        } else {
-          toast({ title: 'Registration Successful', description: 'Admin account created!' });
-          navigate('/dashboard');
-        }
+        toast({ title: 'Welcome back!', description: 'Successfully logged in as admin.' });
+        navigate('/dashboard');
       }
     } catch (err) {
       toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
@@ -165,10 +155,12 @@ const Auth = () => {
         <Card className="shadow-xl border-0 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl font-semibold text-center">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+              {activeTab === 'admin' ? 'Admin Login' : (isLogin ? 'Welcome Back' : 'Create Account')}
             </CardTitle>
             <CardDescription className="text-center">
-              {isLogin ? 'Sign in to access your resources' : 'Register to get started'}
+              {activeTab === 'admin' 
+                ? 'Sign in with your admin credentials' 
+                : (isLogin ? 'Sign in to access your resources' : 'Register to get started')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -229,18 +221,6 @@ const Auth = () => {
 
               <TabsContent value="admin">
                 <form onSubmit={handleAdminAuth} className="space-y-4">
-                  {!isLogin && (
-                    <div className="space-y-2">
-                      <Label htmlFor="adminName">Full Name</Label>
-                      <Input
-                        id="adminName"
-                        placeholder="Enter your full name"
-                        value={adminName}
-                        onChange={(e) => setAdminName(e.target.value)}
-                        required={!isLogin}
-                      />
-                    </div>
-                  )}
                   <div className="space-y-2">
                     <Label htmlFor="adminEmail">Email Address</Label>
                     <Input
@@ -265,22 +245,25 @@ const Auth = () => {
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    {isLogin ? 'Sign In' : 'Create Account'}
+                    Sign In
                   </Button>
                 </form>
               </TabsContent>
             </Tabs>
 
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                {isLogin ? "Don't have an account? " : 'Already have an account? '}
-                <span className="font-medium text-primary">{isLogin ? 'Sign up' : 'Sign in'}</span>
-              </button>
-            </div>
+            {/* Only show signup toggle for students */}
+            {activeTab === 'student' && (
+              <div className="mt-6 text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {isLogin ? "Don't have an account? " : 'Already have an account? '}
+                  <span className="font-medium text-primary">{isLogin ? 'Sign up' : 'Sign in'}</span>
+                </button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
