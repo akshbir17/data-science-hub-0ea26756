@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -60,23 +60,32 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        navy: {
-          900: "hsl(var(--navy-900))",
-          800: "hsl(var(--navy-800))",
-          700: "hsl(var(--navy-700))",
-          600: "hsl(var(--navy-600))",
-          500: "hsl(var(--navy-500))",
-          100: "hsl(var(--navy-100))",
-        },
-        cyan: {
-          500: "hsl(var(--cyan-500))",
-          400: "hsl(var(--cyan-400))",
-          300: "hsl(var(--cyan-300))",
+        apple: {
+          blue: "hsl(var(--apple-blue))",
+          green: "hsl(var(--apple-green))",
+          orange: "hsl(var(--apple-orange))",
+          red: "hsl(var(--apple-red))",
+          purple: "hsl(var(--apple-purple))",
+          teal: "hsl(var(--apple-teal))",
+          gray: {
+            50: "hsl(var(--apple-gray-50))",
+            100: "hsl(var(--apple-gray-100))",
+            200: "hsl(var(--apple-gray-200))",
+            300: "hsl(var(--apple-gray-300))",
+            400: "hsl(var(--apple-gray-400))",
+            500: "hsl(var(--apple-gray-500))",
+            600: "hsl(var(--apple-gray-600))",
+            700: "hsl(var(--apple-gray-700))",
+            800: "hsl(var(--apple-gray-800))",
+            900: "hsl(var(--apple-gray-900))",
+          },
         },
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
       },
       borderRadius: {
+        "2xl": "1rem",
+        "3xl": "1.5rem",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
@@ -91,8 +100,8 @@ export default {
           to: { height: "0" },
         },
         "fade-in": {
-          from: { opacity: "0", transform: "translateY(10px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
+          from: { opacity: "0" },
+          to: { opacity: "1" },
         },
         "fade-in-up": {
           from: { opacity: "0", transform: "translateY(20px)" },
