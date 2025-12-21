@@ -269,6 +269,11 @@ const Auth = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Credit line */}
+        <p className="text-center text-muted-foreground/60 text-sm mt-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          made by Akshbir Singh Seehra
+        </p>
       </div>
     </div>
   );
