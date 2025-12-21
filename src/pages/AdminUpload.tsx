@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Upload, 
@@ -18,9 +19,22 @@ import {
   ShieldAlert,
   ArrowLeft,
   BookOpen,
-  ClipboardList
+  ClipboardList,
+  Trash2,
+  FolderOpen
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface Subject {
   id: string;
@@ -29,14 +43,26 @@ interface Subject {
   semester: string;
 }
 
+interface Resource {
+  id: string;
+  title: string;
+  file_name: string;
+  file_path: string;
+  resource_type: string;
+  created_at: string;
+  subject_id: string;
+}
+
 const AdminUpload = () => {
   const { user, userRole, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const [semester, setSemester] = useState<string>('');
   const [subjectId, setSubjectId] = useState<string>('');
@@ -44,6 +70,10 @@ const AdminUpload = () => {
   const [description, setDescription] = useState('');
   const [resourceType, setResourceType] = useState<string>('material');
   const [file, setFile] = useState<File | null>(null);
+
+  // For manage tab
+  const [manageSemester, setManageSemester] = useState<string>('');
+  const [manageSubjectId, setManageSubjectId] = useState<string>('');
 
   useEffect(() => {
     fetchSubjects();
@@ -59,6 +89,14 @@ const AdminUpload = () => {
       navigate('/dashboard');
     }
   }, [userRole, authLoading, navigate, toast]);
+
+  useEffect(() => {
+    if (manageSubjectId) {
+      fetchResources(manageSubjectId);
+    } else {
+      setResources([]);
+    }
+  }, [manageSubjectId]);
 
   const fetchSubjects = async () => {
     setLoading(true);
@@ -77,7 +115,62 @@ const AdminUpload = () => {
     }
   };
 
+  const fetchResources = async (subjectId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('resources')
+        .select('*')
+        .eq('subject_id', subjectId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setResources(data || []);
+    } catch (error) {
+      console.error('Error fetching resources:', error);
+    }
+  };
+
+  const handleDeleteResource = async (resource: Resource) => {
+    setDeleting(resource.id);
+    try {
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('resources')
+        .remove([resource.file_path]);
+
+      if (storageError) {
+        console.error('Storage delete error:', storageError);
+      }
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('resources')
+        .delete()
+        .eq('id', resource.id);
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: 'Resource Deleted',
+        description: `"${resource.title}" has been removed.`,
+      });
+
+      // Refresh the list
+      fetchResources(manageSubjectId);
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast({
+        title: 'Delete Failed',
+        description: error.message || 'An error occurred while deleting.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   const filteredSubjects = subjects.filter(s => !semester || s.semester === semester);
+  const manageFilteredSubjects = subjects.filter(s => !manageSemester || s.semester === manageSemester);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -170,6 +263,11 @@ const AdminUpload = () => {
     }
   };
 
+  const getSubjectName = (subjectId: string) => {
+    const subject = subjects.find(s => s.id === subjectId);
+    return subject ? `${subject.name} (${subject.code})` : 'Unknown';
+  };
+
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -199,193 +297,329 @@ const AdminUpload = () => {
           Back to Dashboard
         </Link>
         
-        <h1 className="text-2xl font-bold text-foreground">Upload Resources</h1>
+        <h1 className="text-2xl font-bold text-foreground">Admin Panel</h1>
         <p className="text-muted-foreground mt-1">
-          Add study materials or past year questions for students
+          Manage study materials and resources
         </p>
       </div>
 
-      <Card className="border-0 shadow-apple-lg rounded-3xl overflow-hidden">
-        <CardHeader className="bg-secondary/30 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10">
-              <Upload className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <CardTitle>New Resource</CardTitle>
-              <CardDescription>Upload PDFs or Word documents for students</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Resource Type */}
-            <div className="space-y-3">
-              <Label>Resource Type *</Label>
-              <RadioGroup
-                value={resourceType}
-                onValueChange={setResourceType}
-                className="grid grid-cols-2 gap-4"
-              >
-                <Label
-                  htmlFor="material"
-                  className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-apple ${
-                    resourceType === 'material'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <RadioGroupItem value="material" id="material" className="sr-only" />
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    resourceType === 'material' ? 'bg-primary/10' : 'bg-secondary'
-                  }`}>
-                    <BookOpen className={`w-5 h-5 ${resourceType === 'material' ? 'text-primary' : 'text-muted-foreground'}`} />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Study Material</p>
-                    <p className="text-xs text-muted-foreground">Notes, modules, slides</p>
-                  </div>
-                </Label>
-                <Label
-                  htmlFor="pyq"
-                  className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-apple ${
-                    resourceType === 'pyq'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <RadioGroupItem value="pyq" id="pyq" className="sr-only" />
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    resourceType === 'pyq' ? 'bg-primary/10' : 'bg-secondary'
-                  }`}>
-                    <ClipboardList className={`w-5 h-5 ${resourceType === 'pyq' ? 'text-primary' : 'text-muted-foreground'}`} />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Past Year Question</p>
-                    <p className="text-xs text-muted-foreground">Previous exam papers</p>
-                  </div>
-                </Label>
-              </RadioGroup>
-            </div>
+      <Tabs defaultValue="upload" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 rounded-2xl h-12">
+          <TabsTrigger value="upload" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <Upload className="w-4 h-4 mr-2" />
+            Upload
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <FolderOpen className="w-4 h-4 mr-2" />
+            Manage
+          </TabsTrigger>
+        </TabsList>
 
-            {/* Semester Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="semester">Semester *</Label>
-              <Select value={semester} onValueChange={(value) => { setSemester(value); setSubjectId(''); }}>
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="Select semester" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3rd">3rd Semester</SelectItem>
-                  <SelectItem value="4th">4th Semester</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Subject Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject *</Label>
-              <Select value={subjectId} onValueChange={setSubjectId} disabled={!semester}>
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder={semester ? "Select subject" : "Select semester first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredSubjects.map(subject => (
-                    <SelectItem key={subject.id} value={subject.id}>
-                      {subject.name} ({subject.code})
-                    </SelectItem>
-                  ))}
-                  {filteredSubjects.length === 0 && semester && (
-                    <SelectItem value="none" disabled>
-                      No subjects for this semester
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                placeholder={resourceType === 'pyq' ? "e.g., June 2023 Question Paper" : "e.g., Module 1 - Introduction"}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="rounded-xl"
-                required
-              />
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                placeholder="Brief description of the content..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                className="rounded-xl resize-none"
-              />
-            </div>
-
-            {/* File Upload */}
-            <div className="space-y-2">
-              <Label htmlFor="file-upload">File *</Label>
-              <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center hover:border-primary/50 transition-apple">
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  {file ? (
-                    <div className="flex items-center justify-center gap-3">
-                      <CheckCircle2 className="w-10 h-10 text-success" />
-                      <div className="text-left">
-                        <p className="font-medium text-foreground">{file.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </p>
+        <TabsContent value="upload" className="mt-6">
+          <Card className="border-0 shadow-apple-lg rounded-3xl overflow-hidden">
+            <CardHeader className="bg-secondary/30 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10">
+                  <Upload className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>New Resource</CardTitle>
+                  <CardDescription>Upload PDFs or Word documents for students</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Resource Type */}
+                <div className="space-y-3">
+                  <Label>Resource Type *</Label>
+                  <RadioGroup
+                    value={resourceType}
+                    onValueChange={setResourceType}
+                    className="grid grid-cols-2 gap-4"
+                  >
+                    <Label
+                      htmlFor="material"
+                      className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-apple ${
+                        resourceType === 'material'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <RadioGroupItem value="material" id="material" className="sr-only" />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        resourceType === 'material' ? 'bg-primary/10' : 'bg-secondary'
+                      }`}>
+                        <BookOpen className={`w-5 h-5 ${resourceType === 'material' ? 'text-primary' : 'text-muted-foreground'}`} />
                       </div>
+                      <div>
+                        <p className="font-medium text-foreground">Study Material</p>
+                        <p className="text-xs text-muted-foreground">Notes, modules, slides</p>
+                      </div>
+                    </Label>
+                    <Label
+                      htmlFor="pyq"
+                      className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-apple ${
+                        resourceType === 'pyq'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <RadioGroupItem value="pyq" id="pyq" className="sr-only" />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        resourceType === 'pyq' ? 'bg-primary/10' : 'bg-secondary'
+                      }`}>
+                        <ClipboardList className={`w-5 h-5 ${resourceType === 'pyq' ? 'text-primary' : 'text-muted-foreground'}`} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Past Year Question</p>
+                        <p className="text-xs text-muted-foreground">Previous exam papers</p>
+                      </div>
+                    </Label>
+                  </RadioGroup>
+                </div>
+
+                {/* Semester Selection */}
+                <div className="space-y-2">
+                  <Label htmlFor="semester">Semester *</Label>
+                  <Select value={semester} onValueChange={(value) => { setSemester(value); setSubjectId(''); }}>
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder="Select semester" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3rd">3rd Semester</SelectItem>
+                      <SelectItem value="4th">4th Semester</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Subject Selection */}
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Subject *</Label>
+                  <Select value={subjectId} onValueChange={setSubjectId} disabled={!semester}>
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder={semester ? "Select subject" : "Select semester first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredSubjects.map(subject => (
+                        <SelectItem key={subject.id} value={subject.id}>
+                          {subject.name} ({subject.code})
+                        </SelectItem>
+                      ))}
+                      {filteredSubjects.length === 0 && semester && (
+                        <SelectItem value="none" disabled>
+                          No subjects for this semester
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Title */}
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title *</Label>
+                  <Input
+                    id="title"
+                    placeholder={resourceType === 'pyq' ? "e.g., June 2023 Question Paper" : "e.g., Module 1 - Introduction"}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="rounded-xl"
+                    required
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Brief description of the content..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    className="rounded-xl resize-none"
+                  />
+                </div>
+
+                {/* File Upload */}
+                <div className="space-y-2">
+                  <Label htmlFor="file-upload">File *</Label>
+                  <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center hover:border-primary/50 transition-apple">
+                    <input
+                      id="file-upload"
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      {file ? (
+                        <div className="flex items-center justify-center gap-3">
+                          <CheckCircle2 className="w-10 h-10 text-success" />
+                          <div className="text-left">
+                            <p className="font-medium text-foreground">{file.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {(file.size / (1024 * 1024)).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto">
+                            <FileText className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                          <p className="text-foreground font-medium">
+                            Click to upload or drag and drop
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            PDF or Word document (max 50MB)
+                          </p>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <Button type="submit" className="w-full rounded-xl h-12 text-base" disabled={uploading}>
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload {resourceType === 'pyq' ? 'Question Paper' : 'Resource'}
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="manage" className="mt-6">
+          <Card className="border-0 shadow-apple-lg rounded-3xl overflow-hidden">
+            <CardHeader className="bg-secondary/30 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-destructive/10">
+                  <Trash2 className="w-6 h-6 text-destructive" />
+                </div>
+                <div>
+                  <CardTitle>Manage Resources</CardTitle>
+                  <CardDescription>View and delete uploaded resources</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              {/* Semester Selection */}
+              <div className="space-y-2">
+                <Label>Semester</Label>
+                <Select value={manageSemester} onValueChange={(value) => { setManageSemester(value); setManageSubjectId(''); }}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder="Select semester" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3rd">3rd Semester</SelectItem>
+                    <SelectItem value="4th">4th Semester</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Subject Selection */}
+              <div className="space-y-2">
+                <Label>Subject</Label>
+                <Select value={manageSubjectId} onValueChange={setManageSubjectId} disabled={!manageSemester}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder={manageSemester ? "Select subject" : "Select semester first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {manageFilteredSubjects.map(subject => (
+                      <SelectItem key={subject.id} value={subject.id}>
+                        {subject.name} ({subject.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Resources List */}
+              {manageSubjectId && (
+                <div className="space-y-3">
+                  <Label>Resources ({resources.length})</Label>
+                  {resources.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No resources found for this subject</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto">
-                        <FileText className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                      <p className="text-foreground font-medium">
-                        Click to upload or drag and drop
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        PDF or Word document (max 50MB)
-                      </p>
+                      {resources.map((resource) => (
+                        <div
+                          key={resource.id}
+                          className="flex items-center justify-between p-4 rounded-2xl bg-secondary/30 border border-border/50"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                              resource.resource_type === 'pyq' ? 'bg-amber-500/10' : 'bg-primary/10'
+                            }`}>
+                              {resource.resource_type === 'pyq' ? (
+                                <ClipboardList className="w-5 h-5 text-amber-500" />
+                              ) : (
+                                <BookOpen className="w-5 h-5 text-primary" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-foreground truncate">{resource.title}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {resource.file_name} • {new Date(resource.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                                disabled={deleting === resource.id}
+                              >
+                                {deleting === resource.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="rounded-2xl">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Resource</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{resource.title}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={() => handleDeleteResource(resource)}
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      ))}
                     </div>
                   )}
-                </label>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <Button type="submit" className="w-full rounded-xl h-12 text-base" disabled={uploading}>
-              {uploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload {resourceType === 'pyq' ? 'Question Paper' : 'Resource'}
-                </>
+                </div>
               )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
