@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +14,8 @@ import {
   ChevronRight,
   FolderOpen,
   Clock,
-  GraduationCap
+  GraduationCap,
+  Sparkles
 } from 'lucide-react';
 
 interface Subject {
@@ -34,6 +34,43 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BarChart,
   Monitor,
   BookOpen,
+};
+
+// Circular progress component
+const CircularProgress = ({ progress, size = 48 }: { progress: number; size?: number }) => {
+  const strokeWidth = 4;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (progress / 100) * circumference;
+
+  return (
+    <svg width={size} height={size} className="progress-ring">
+      <circle
+        stroke="hsla(265, 40%, 35%, 0.3)"
+        strokeWidth={strokeWidth}
+        fill="transparent"
+        r={radius}
+        cx={size / 2}
+        cy={size / 2}
+      />
+      <circle
+        stroke="url(#progressGradient)"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        fill="transparent"
+        r={radius}
+        cx={size / 2}
+        cy={size / 2}
+        style={{ strokeDasharray: circumference, strokeDashoffset: offset }}
+      />
+      <defs>
+        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="hsl(270, 80%, 65%)" />
+          <stop offset="100%" stopColor="hsl(280, 85%, 70%)" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
 };
 
 const Dashboard = () => {
@@ -78,115 +115,142 @@ const Dashboard = () => {
   const thirdSemSubjects = subjects.filter(s => s.semester === '3rd');
   const fourthSemSubjects = subjects.filter(s => s.semester === '4th');
 
-  const SubjectCard = ({ subject }: { subject: Subject }) => {
+  const SubjectCard = ({ subject, index }: { subject: Subject; index: number }) => {
     const IconComponent = iconMap[subject.icon] || BookOpen;
     const count = resourceCounts[subject.id] || 0;
+    const progress = Math.min(count * 10, 100); // Example progress calculation
 
     return (
       <Link to={`/subject/${subject.id}`}>
-        <Card className="group h-full hover-lift cursor-pointer border-0 bg-card rounded-2xl shadow-apple-sm">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 group-hover:bg-primary/15 transition-apple">
-                <IconComponent className="w-6 h-6 text-primary" />
-              </div>
-              <Badge variant="secondary" className="text-xs rounded-lg font-medium">
-                {subject.code}
-              </Badge>
+        <div className="group glass-card rounded-3xl p-5 hover-lift cursor-pointer h-full">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-2xl gradient-purple shadow-glow-sm">
+              <IconComponent className="w-6 h-6 text-primary-foreground" />
             </div>
-            <CardTitle className="text-lg mt-4 group-hover:text-primary transition-apple">
+            <CircularProgress progress={progress} size={44} />
+          </div>
+          
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+              {subject.code}
+            </p>
+            <h3 className="text-lg font-semibold text-foreground group-hover:text-gradient transition-colors">
               {subject.name}
-            </CardTitle>
-            <CardDescription className="line-clamp-2">
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2">
               {subject.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <FolderOpen className="w-4 h-4" />
-                <span>{count} {count === 1 ? 'resource' : 'resources'}</span>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-apple" />
+            </p>
+          </div>
+          
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/30">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FolderOpen className="w-4 h-4" />
+              <span>{count} resources</span>
             </div>
-          </CardContent>
-        </Card>
+            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+          </div>
+        </div>
       </Link>
     );
   };
 
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'there';
+
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Welcome Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-mesh p-8 border border-border/50">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div>
-            <Badge className="bg-primary/10 text-primary border-0 mb-4 rounded-lg">
-              {userRole === 'admin' ? 'Administrator' : 'Student Portal'}
-            </Badge>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'there'}!
-            </h1>
-            <p className="text-muted-foreground max-w-xl">
-              Access your course materials, lecture notes, and study resources. 
-              {userRole === 'admin' && ' You can also upload new resources for students.'}
-            </p>
-          </div>
+      {/* Hero Section */}
+      <div className="relative overflow-hidden rounded-3xl glass-card p-8">
+        {/* Background glow effects */}
+        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary/20 blur-3xl animate-pulse-slow" />
+        <div className="absolute -bottom-20 -left-20 w-48 h-48 rounded-full bg-accent/20 blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
+        
+        <div className="relative z-10">
+          <p className="text-sm text-muted-foreground mb-2">Hello,</p>
+          <h1 className="text-4xl font-bold text-gradient mb-2">{firstName}</h1>
           
-          {/* Quick Actions */}
-          <div className="flex gap-3">
+          {/* Tab-like navigation */}
+          <div className="flex gap-2 mt-6 flex-wrap">
+            <Badge className="bg-primary/20 text-primary border-primary/30 px-4 py-2 rounded-full text-sm font-medium">
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              {userRole === 'admin' ? 'Admin' : 'Student'}
+            </Badge>
             <Link to="/calculator">
-              <Button variant="outline" className="gap-2 rounded-xl hover-lift">
-                <GraduationCap className="w-4 h-4" />
+              <Badge variant="outline" className="bg-secondary/50 border-border/50 px-4 py-2 rounded-full text-sm font-medium hover:bg-secondary transition-colors cursor-pointer">
+                <GraduationCap className="w-3.5 h-3.5 mr-1.5" />
                 CGPA Calculator
-              </Button>
+              </Badge>
             </Link>
           </div>
         </div>
       </div>
 
+      {/* Quick Stats Cards */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="glass-card rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Subjects</p>
+            <div className="w-10 h-10 rounded-xl gradient-purple flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-primary-foreground" />
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-foreground">{subjects.length}</p>
+        </div>
+        
+        <div className="glass-card rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Resources</p>
+            <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+              <FolderOpen className="w-5 h-5 text-accent" />
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-foreground">
+            {Object.values(resourceCounts).reduce((a, b) => a + b, 0)}
+          </p>
+        </div>
+      </div>
+
       {/* 3rd Semester */}
       <section>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
-            <BookOpen className="w-5 h-5 text-primary" />
+        <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl gradient-purple shadow-glow-sm">
+            <BookOpen className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
             <h2 className="text-xl font-semibold text-foreground">3rd Semester</h2>
-            <p className="text-sm text-muted-foreground">Core subjects and study materials</p>
+            <p className="text-sm text-muted-foreground">Core subjects</p>
           </div>
         </div>
         
         {loading ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(5)].map((_, i) => (
-              <Card key={i} className="h-48 animate-pulse bg-secondary/50 rounded-2xl border-0" />
+              <div key={i} className="h-52 animate-pulse glass-card rounded-3xl" />
             ))}
           </div>
         ) : thirdSemSubjects.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {thirdSemSubjects.map((subject, index) => (
               <div 
                 key={subject.id} 
                 className="animate-fade-in-up"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <SubjectCard subject={subject} />
+                <SubjectCard subject={subject} index={index} />
               </div>
             ))}
           </div>
         ) : (
-          <Card className="p-8 text-center rounded-2xl border-0 shadow-apple-sm">
+          <div className="glass-card p-8 text-center rounded-3xl">
             <p className="text-muted-foreground">No subjects found for 3rd semester.</p>
-          </Card>
+          </div>
         )}
       </section>
 
       {/* 4th Semester */}
       <section>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-apple-purple/10">
-            <Clock className="w-5 h-5 text-apple-purple" />
+        <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent/20">
+            <Clock className="w-5 h-5 text-accent" />
           </div>
           <div>
             <h2 className="text-xl font-semibold text-foreground">4th Semester</h2>
@@ -195,25 +259,25 @@ const Dashboard = () => {
         </div>
         
         {fourthSemSubjects.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {fourthSemSubjects.map((subject, index) => (
               <div 
                 key={subject.id} 
                 className="animate-fade-in-up"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <SubjectCard subject={subject} />
+                <SubjectCard subject={subject} index={index} />
               </div>
             ))}
           </div>
         ) : (
-          <Card className="p-12 text-center border-2 border-dashed border-border bg-secondary/20 rounded-2xl">
+          <div className="glass-card p-10 text-center rounded-3xl border-2 border-dashed border-border/50">
             <Clock className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="font-semibold text-foreground mb-1">4th Semester Resources</h3>
             <p className="text-muted-foreground text-sm">
               Subjects and materials will be added soon. Stay tuned!
             </p>
-          </Card>
+          </div>
         )}
       </section>
     </div>

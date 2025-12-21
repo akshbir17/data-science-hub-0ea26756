@@ -16,9 +16,11 @@ const DashboardLayout = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <div className="w-16 h-16 rounded-2xl gradient-purple shadow-glow flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-foreground" />
+          </div>
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -30,7 +32,7 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <Header />
       <main className="container mx-auto px-4 py-8">
         <Outlet />

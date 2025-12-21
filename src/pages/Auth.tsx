@@ -135,29 +135,28 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-20 w-72 h-72 rounded-full bg-cyan-400 blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-primary blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 gradient-glow" />
+      <div className="absolute top-20 left-20 w-72 h-72 rounded-full bg-primary/20 blur-3xl animate-pulse-slow" />
+      <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full bg-accent/20 blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo/Header */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-accent shadow-glow mb-4">
-            <BookOpen className="w-8 h-8 text-accent-foreground" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-purple shadow-glow mb-4">
+            <BookOpen className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-primary-foreground">Data Science Department</h1>
-          <p className="text-primary-foreground/70 mt-1">Resource Portal</p>
+          <h1 className="text-2xl font-bold text-gradient">Data Science Department</h1>
+          <p className="text-muted-foreground mt-1">Resource Portal</p>
         </div>
 
-        <Card className="shadow-xl border-0 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <Card className="glass-card border-0 shadow-purple animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl font-semibold text-center">
+            <CardTitle className="text-xl font-semibold text-center text-foreground">
               {activeTab === 'admin' ? 'Admin Login' : (isLogin ? 'Welcome Back' : 'Create Account')}
             </CardTitle>
-            <CardDescription className="text-center">
+            <CardDescription className="text-center text-muted-foreground">
               {activeTab === 'admin' 
                 ? 'Sign in with your admin credentials' 
                 : (isLogin ? 'Sign in to access your resources' : 'Register to get started')}
@@ -165,12 +164,12 @@ const Auth = () => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'student' | 'admin')}>
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="student" className="flex items-center gap-2">
+              <TabsList className="grid w-full grid-cols-2 mb-6 bg-secondary/50 p-1 rounded-xl">
+                <TabsTrigger value="student" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <GraduationCap className="w-4 h-4" />
                   Student
                 </TabsTrigger>
-                <TabsTrigger value="admin" className="flex items-center gap-2">
+                <TabsTrigger value="admin" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <ShieldCheck className="w-4 h-4" />
                   Admin
                 </TabsTrigger>
@@ -180,29 +179,30 @@ const Auth = () => {
                 <form onSubmit={handleStudentAuth} className="space-y-4">
                   {!isLogin && (
                     <div className="space-y-2">
-                      <Label htmlFor="studentName">Full Name</Label>
+                      <Label htmlFor="studentName" className="text-foreground">Full Name</Label>
                       <Input
                         id="studentName"
                         placeholder="Enter your full name"
                         value={studentName}
                         onChange={(e) => setStudentName(e.target.value)}
                         required={!isLogin}
+                        className="bg-input border-border/50 rounded-xl focus:border-primary"
                       />
                     </div>
                   )}
                   <div className="space-y-2">
-                    <Label htmlFor="usn">University Seat Number (USN)</Label>
+                    <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
                     <Input
                       id="usn"
                       placeholder="e.g., 1DS22DS001"
                       value={studentUSN}
                       onChange={(e) => setStudentUSN(e.target.value.toUpperCase())}
                       required
-                      className="uppercase"
+                      className="bg-input border-border/50 rounded-xl uppercase focus:border-primary"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="studentPassword">Password</Label>
+                    <Label htmlFor="studentPassword" className="text-foreground">Password</Label>
                     <Input
                       id="studentPassword"
                       type="password"
@@ -210,9 +210,10 @@ const Auth = () => {
                       value={studentPassword}
                       onChange={(e) => setStudentPassword(e.target.value)}
                       required
+                      className="bg-input border-border/50 rounded-xl focus:border-primary"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" className="w-full gradient-purple rounded-xl shadow-glow-sm hover:shadow-glow transition-all" disabled={loading}>
                     {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     {isLogin ? 'Sign In' : 'Create Account'}
                   </Button>
@@ -222,7 +223,7 @@ const Auth = () => {
               <TabsContent value="admin">
                 <form onSubmit={handleAdminAuth} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="adminEmail">Email Address</Label>
+                    <Label htmlFor="adminEmail" className="text-foreground">Email Address</Label>
                     <Input
                       id="adminEmail"
                       type="email"
@@ -230,10 +231,11 @@ const Auth = () => {
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
                       required
+                      className="bg-input border-border/50 rounded-xl focus:border-primary"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="adminPassword">Password</Label>
+                    <Label htmlFor="adminPassword" className="text-foreground">Password</Label>
                     <Input
                       id="adminPassword"
                       type="password"
@@ -241,9 +243,10 @@ const Auth = () => {
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
                       required
+                      className="bg-input border-border/50 rounded-xl focus:border-primary"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" className="w-full gradient-purple rounded-xl shadow-glow-sm hover:shadow-glow transition-all" disabled={loading}>
                     {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Sign In
                   </Button>
