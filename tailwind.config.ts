@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -60,32 +60,21 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        apple: {
-          blue: "hsl(var(--apple-blue))",
-          green: "hsl(var(--apple-green))",
-          orange: "hsl(var(--apple-orange))",
-          red: "hsl(var(--apple-red))",
-          purple: "hsl(var(--apple-purple))",
-          teal: "hsl(var(--apple-teal))",
-          gray: {
-            50: "hsl(var(--apple-gray-50))",
-            100: "hsl(var(--apple-gray-100))",
-            200: "hsl(var(--apple-gray-200))",
-            300: "hsl(var(--apple-gray-300))",
-            400: "hsl(var(--apple-gray-400))",
-            500: "hsl(var(--apple-gray-500))",
-            600: "hsl(var(--apple-gray-600))",
-            700: "hsl(var(--apple-gray-700))",
-            800: "hsl(var(--apple-gray-800))",
-            900: "hsl(var(--apple-gray-900))",
-          },
+        purple: {
+          glow: "hsl(var(--purple-glow))",
+          deep: "hsl(var(--purple-deep))",
+          surface: "hsl(var(--purple-surface))",
+          accent: "hsl(var(--purple-accent))",
         },
-        success: "hsl(var(--success))",
-        warning: "hsl(var(--warning))",
+        glass: {
+          bg: "hsl(var(--glass-bg))",
+          border: "hsl(var(--glass-border))",
+        },
       },
       borderRadius: {
         "2xl": "1rem",
         "3xl": "1.5rem",
+        "4xl": "2rem",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
@@ -115,6 +104,9 @@ export default {
           from: { opacity: "0", transform: "scale(0.95)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -123,6 +115,7 @@ export default {
         "fade-in-up": "fade-in-up 0.6s ease-out forwards",
         "slide-in-right": "slide-in-right 0.5s ease-out forwards",
         "scale-in": "scale-in 0.3s ease-out forwards",
+        shimmer: "shimmer 2s infinite",
       },
     },
   },
