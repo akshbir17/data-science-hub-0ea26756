@@ -14,6 +14,27 @@ const emailSchema = z.string().email('Invalid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 const usnSchema = z.string().min(10, 'USN must be at least 10 characters').max(15, 'USN must be at most 15 characters');
 
+// Common vulgar/inappropriate words filter
+const vulgarWords = [
+  'fuck', 'shit', 'ass', 'bitch', 'damn', 'crap', 'dick', 'cock', 'pussy', 
+  'bastard', 'slut', 'whore', 'cunt', 'piss', 'fag', 'nigger', 'nigga',
+  'retard', 'idiot', 'stupid', 'dumb', 'hate', 'kill', 'die', 'sex',
+  'porn', 'nude', 'naked', 'penis', 'vagina', 'boob', 'tit', 'arse'
+];
+
+const containsVulgarWord = (text: string): boolean => {
+  const lowerText = text.toLowerCase().replace(/[^a-z]/g, '');
+  return vulgarWords.some(word => lowerText.includes(word));
+};
+
+const nameSchema = z.string()
+  .min(2, 'Name must be at least 2 characters')
+  .max(50, 'Name must be at most 50 characters')
+  .refine(
+    (name) => !containsVulgarWord(name),
+    { message: 'Please use an appropriate name without vulgar language' }
+  );
+
 const Auth = () => {
   const [activeTab, setActiveTab] = useState<'student' | 'admin'>('student');
   const [isLogin, setIsLogin] = useState(true);
@@ -77,8 +98,18 @@ const Auth = () => {
           navigate('/dashboard');
         }
       } else {
+        // Validate name for signup
+        if (!isLogin) {
+          const nameResult = nameSchema.safeParse(studentName);
+          if (!nameResult.success) {
+            toast({ title: 'Validation Error', description: nameResult.error.errors[0].message, variant: 'destructive' });
+            setLoading(false);
+            return;
+          }
+        }
+
         const { error } = await signUp(email, studentPassword, {
-          full_name: studentName,
+          full_name: studentName.trim(),
           usn: studentUSN.toUpperCase(),
           role: 'student',
         });
