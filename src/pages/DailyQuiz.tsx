@@ -441,10 +441,12 @@ const DailyQuiz = () => {
                 )}
 
                 <div className="flex gap-3 mt-6">
-                  <Button variant="outline" onClick={() => setShowLeaderboard(false)} className="flex-1">
-                    Back to Results
-                  </Button>
-                  <Button onClick={resetQuiz} className="flex-1">
+                  {showResults && questions.length > 0 ? (
+                    <Button variant="outline" onClick={() => setShowLeaderboard(false)} className="flex-1">
+                      Back to Results
+                    </Button>
+                  ) : null}
+                  <Button onClick={resetQuiz} className={showResults && questions.length > 0 ? "flex-1" : "w-full"}>
                     Choose Another Subject
                   </Button>
                 </div>
