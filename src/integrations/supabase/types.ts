@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_quiz_scores: {
+        Row: {
+          completed_at: string
+          id: string
+          quiz_date: string
+          score: number
+          subject_id: string
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          quiz_date?: string
+          score: number
+          subject_id: string
+          total_questions?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          quiz_date?: string
+          score?: number
+          subject_id?: string
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_quiz_scores_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_scores: {
         Row: {
           completed_at: string

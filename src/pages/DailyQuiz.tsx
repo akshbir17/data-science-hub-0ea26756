@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -16,7 +17,9 @@ import {
   Trophy,
   Loader2,
   Sparkles,
-  BookOpen
+  BookOpen,
+  Medal,
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,9 +37,19 @@ interface Question {
   explanation: string;
 }
 
+interface LeaderboardEntry {
+  user_id: string;
+  score: number;
+  profiles: {
+    full_name: string | null;
+    usn: string | null;
+  } | null;
+}
+
 const DailyQuiz = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuth();
   
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
@@ -44,8 +57,11 @@ const DailyQuiz = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [showResults, setShowResults] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [scoreSaved, setScoreSaved] = useState(false);
 
   useEffect(() => {
     fetchSubjects();
@@ -59,12 +75,89 @@ const DailyQuiz = () => {
         .order('name');
       
       if (error) throw error;
-      setSubjects(data || []);
+      
+      // Filter out lab manuals (subjects with "Lab" in the name)
+      const filteredSubjects = (data || []).filter(
+        subject => !subject.name.toLowerCase().includes('lab')
+      );
+      
+      setSubjects(filteredSubjects);
     } catch (error) {
       console.error('Error fetching subjects:', error);
       toast.error('Failed to load subjects');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLeaderboard = async (subjectId: string) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // First fetch the scores
+      const { data: scores, error: scoresError } = await supabase
+        .from('daily_quiz_scores')
+        .select('user_id, score')
+        .eq('subject_id', subjectId)
+        .eq('quiz_date', today)
+        .order('score', { ascending: false })
+        .limit(10);
+
+      if (scoresError) throw scoresError;
+      
+      if (!scores || scores.length === 0) {
+        setLeaderboard([]);
+        return;
+      }
+
+      // Then fetch profiles for those users
+      const userIds = scores.map(s => s.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, usn')
+        .in('user_id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      const leaderboardData: LeaderboardEntry[] = scores.map(s => ({
+        user_id: s.user_id,
+        score: s.score,
+        profiles: profileMap.get(s.user_id) || null
+      }));
+
+      setLeaderboard(leaderboardData);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    }
+  };
+
+  const saveScore = async (score: number) => {
+    if (!user || !selectedSubject || scoreSaved) return;
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { error } = await supabase
+        .from('daily_quiz_scores')
+        .upsert({
+          user_id: user.id,
+          subject_id: selectedSubject.id,
+          score: score,
+          total_questions: questions.length,
+          quiz_date: today,
+        }, {
+          onConflict: 'user_id,subject_id,quiz_date'
+        });
+
+      if (error) throw error;
+      setScoreSaved(true);
+      
+      // Fetch updated leaderboard
+      await fetchLeaderboard(selectedSubject.id);
+    } catch (error) {
+      console.error('Error saving score:', error);
     }
   };
 
@@ -139,8 +232,10 @@ const DailyQuiz = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setShowResults(true);
+    const score = getScore();
+    await saveScore(score);
   };
 
   const getScore = () => {
@@ -155,12 +250,17 @@ const DailyQuiz = () => {
     setCurrentQuestion(0);
     setSelectedAnswers({});
     setShowResults(false);
+    setShowLeaderboard(false);
+    setScoreSaved(false);
+    setLeaderboard([]);
   };
 
   const retryQuiz = () => {
     setCurrentQuestion(0);
     setSelectedAnswers({});
     setShowResults(false);
+    setShowLeaderboard(false);
+    setScoreSaved(false);
   };
 
   if (loading) {
@@ -245,6 +345,80 @@ const DailyQuiz = () => {
     );
   }
 
+  // Leaderboard screen
+  if (showLeaderboard) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Card className="glass-card border-border/30">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 rounded-full bg-yellow-500/20 mx-auto mb-4 flex items-center justify-center">
+                  <Trophy className="w-8 h-8 text-yellow-500" />
+                </div>
+                <CardTitle className="text-2xl">Today's Leaderboard</CardTitle>
+                <p className="text-muted-foreground">{selectedSubject.name}</p>
+              </CardHeader>
+              <CardContent>
+                {leaderboard.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No scores yet today. Be the first!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {leaderboard.map((entry, idx) => {
+                      const isCurrentUser = user?.id === entry.user_id;
+                      return (
+                        <div
+                          key={entry.user_id}
+                          className={`flex items-center gap-4 p-4 rounded-xl ${
+                            isCurrentUser ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/30'
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                            idx === 0 ? 'bg-yellow-500 text-yellow-950' :
+                            idx === 1 ? 'bg-gray-400 text-gray-950' :
+                            idx === 2 ? 'bg-amber-600 text-amber-950' :
+                            'bg-muted text-muted-foreground'
+                          }`}>
+                            {idx < 3 ? <Medal className="w-4 h-4" /> : idx + 1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground">
+                              {entry.profiles?.full_name || 'Anonymous'}
+                              {isCurrentUser && <span className="text-primary ml-2">(You)</span>}
+                            </p>
+                            {entry.profiles?.usn && (
+                              <p className="text-sm text-muted-foreground">{entry.profiles.usn}</p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-lg text-foreground">{entry.score}/5</p>
+                            <p className="text-sm text-muted-foreground">{Math.round((entry.score / 5) * 100)}%</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="flex gap-3 mt-6">
+                  <Button variant="outline" onClick={() => setShowLeaderboard(false)} className="flex-1">
+                    Back to Results
+                  </Button>
+                  <Button onClick={resetQuiz} className="flex-1">
+                    Choose Another Subject
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Results screen
   if (showResults) {
     const score = getScore();
@@ -268,12 +442,16 @@ const DailyQuiz = () => {
                 <p className="text-muted-foreground mb-4">{percentage}% correct</p>
                 <Progress value={percentage} className="h-3 mb-6" />
                 
-                <div className="flex gap-3 justify-center">
+                <div className="flex gap-3 justify-center flex-wrap">
                   <Button variant="outline" onClick={resetQuiz}>
                     Choose Another Subject
                   </Button>
-                  <Button onClick={retryQuiz}>
+                  <Button variant="outline" onClick={retryQuiz}>
                     Retry Quiz
+                  </Button>
+                  <Button onClick={() => setShowLeaderboard(true)} className="gap-2">
+                    <Trophy className="w-4 h-4" />
+                    View Leaderboard
                   </Button>
                 </div>
               </CardContent>
