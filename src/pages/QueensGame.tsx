@@ -50,106 +50,28 @@ type CellState = 'empty' | 'x' | 'queen';
 interface Puzzle {
   size: number;
   regions: number[][]; // region ID for each cell
-  solution: boolean[][]; // true = queen position
+  solution: [number, number][]; // queen positions
 }
 
-// Generate a valid Queens puzzle
+// Generate a valid Queens puzzle - solution first, then regions
 const generatePuzzle = (seed: number, size: number = 8): Puzzle => {
-  // Generate region layout - each region is a connected group of cells
-  const regions: number[][] = Array.from({ length: size }, () => 
-    Array(size).fill(-1)
-  );
+  // Step 1: Generate a valid queen placement first (N-Queens with no touching)
+  const solution: [number, number][] = [];
   
-  // Simple region generation using a spiral-like pattern with randomness
-  let regionId = 0;
-  const cellsPerRegion = Math.floor((size * size) / size);
-  
-  // Create regions by flood-fill approach
-  const unassigned: [number, number][] = [];
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      unassigned.push([r, c]);
+  const isValidQueen = (row: number, col: number): boolean => {
+    for (const [qr, qc] of solution) {
+      // Same column
+      if (qc === col) return false;
+      // Touching (including diagonal)
+      if (Math.abs(qr - row) <= 1 && Math.abs(qc - col) <= 1) return false;
     }
-  }
-  
-  // Shuffle unassigned cells
-  for (let i = unassigned.length - 1; i > 0; i--) {
-    const j = Math.floor(seededRandom(seed + i) * (i + 1));
-    [unassigned[i], unassigned[j]] = [unassigned[j], unassigned[i]];
-  }
-  
-  // Assign cells to regions, trying to keep regions contiguous
-  for (let reg = 0; reg < size; reg++) {
-    let cellsAssigned = 0;
-    const targetCells = Math.floor((size * size) / size);
-    
-    // Find a starting cell for this region
-    for (let i = 0; i < unassigned.length && cellsAssigned < targetCells; i++) {
-      const [r, c] = unassigned[i];
-      if (regions[r][c] === -1) {
-        // Check if adjacent to same region or first cell of region
-        const hasNeighbor = cellsAssigned === 0 || 
-          [[0,1],[0,-1],[1,0],[-1,0]].some(([dr, dc]) => {
-            const nr = r + dr, nc = c + dc;
-            return nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] === reg;
-          });
-        
-        if (hasNeighbor) {
-          regions[r][c] = reg;
-          cellsAssigned++;
-          unassigned.splice(i, 1);
-          i--; // Re-check from same index
-        }
-      }
-    }
-  }
-  
-  // Fill any remaining unassigned cells
-  for (const [r, c] of unassigned) {
-    if (regions[r][c] === -1) {
-      // Assign to nearest region
-      for (const [dr, dc] of [[0,1],[0,-1],[1,0],[-1,0]]) {
-        const nr = r + dr, nc = c + dc;
-        if (nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] !== -1) {
-          regions[r][c] = regions[nr][nc];
-          break;
-        }
-      }
-      if (regions[r][c] === -1) {
-        regions[r][c] = 0; // Fallback
-      }
-    }
-  }
-  
-  // Generate solution - place queens such that:
-  // - One per row, column, and region
-  // - No two queens touch (even diagonally)
-  const solution: boolean[][] = Array.from({ length: size }, () => 
-    Array(size).fill(false)
-  );
-  
-  const isValid = (row: number, col: number, placed: [number, number][]): boolean => {
-    // Check column
-    if (placed.some(([r, c]) => c === col)) return false;
-    
-    // Check region
-    const region = regions[row][col];
-    if (placed.some(([r, c]) => regions[r][c] === region)) return false;
-    
-    // Check touching (including diagonals)
-    for (const [pr, pc] of placed) {
-      if (Math.abs(pr - row) <= 1 && Math.abs(pc - col) <= 1) {
-        return false;
-      }
-    }
-    
     return true;
   };
   
-  const solve = (row: number, placed: [number, number][]): boolean => {
-    if (row >= size) return placed.length === size;
+  const placeQueens = (row: number): boolean => {
+    if (row >= size) return solution.length === size;
     
-    // Shuffle column order for variety
+    // Create shuffled column order for variety
     const cols = Array.from({ length: size }, (_, i) => i);
     for (let i = cols.length - 1; i > 0; i--) {
       const j = Math.floor(seededRandom(seed + row * 100 + i) * (i + 1));
@@ -157,23 +79,98 @@ const generatePuzzle = (seed: number, size: number = 8): Puzzle => {
     }
     
     for (const col of cols) {
-      if (isValid(row, col, placed)) {
-        placed.push([row, col]);
-        if (solve(row + 1, placed)) {
-          return true;
-        }
-        placed.pop();
+      if (isValidQueen(row, col)) {
+        solution.push([row, col]);
+        if (placeQueens(row + 1)) return true;
+        solution.pop();
       }
     }
-    
     return false;
   };
   
-  const placed: [number, number][] = [];
-  solve(0, placed);
+  placeQueens(0);
   
-  for (const [r, c] of placed) {
-    solution[r][c] = true;
+  // Step 2: Create regions around the queens
+  // Each queen gets its own region, grown outward
+  const regions: number[][] = Array.from({ length: size }, () => 
+    Array(size).fill(-1)
+  );
+  
+  // Start each region with its queen
+  for (let i = 0; i < solution.length; i++) {
+    const [r, c] = solution[i];
+    regions[r][c] = i;
+  }
+  
+  // Grow regions using BFS
+  const cellsPerRegion = Math.floor((size * size) / size);
+  const regionSizes = Array(size).fill(1);
+  const queue: [number, number, number][] = []; // [row, col, regionId]
+  
+  // Initialize queue with neighbors of queens
+  for (let i = 0; i < solution.length; i++) {
+    const [r, c] = solution[i];
+    for (const [dr, dc] of [[0,1],[0,-1],[1,0],[-1,0]]) {
+      const nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] === -1) {
+        queue.push([nr, nc, i]);
+      }
+    }
+  }
+  
+  // Shuffle queue for randomness
+  for (let i = queue.length - 1; i > 0; i--) {
+    const j = Math.floor(seededRandom(seed + i + 1000) * (i + 1));
+    [queue[i], queue[j]] = [queue[j], queue[i]];
+  }
+  
+  // Process queue - assign cells to regions
+  let queueIndex = 0;
+  while (queueIndex < queue.length) {
+    const [r, c, regionId] = queue[queueIndex++];
+    
+    if (regions[r][c] !== -1) continue;
+    if (regionSizes[regionId] >= cellsPerRegion + 1) continue;
+    
+    regions[r][c] = regionId;
+    regionSizes[regionId]++;
+    
+    // Add neighbors to queue
+    const neighbors: [number, number, number][] = [];
+    for (const [dr, dc] of [[0,1],[0,-1],[1,0],[-1,0]]) {
+      const nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] === -1) {
+        neighbors.push([nr, nc, regionId]);
+      }
+    }
+    // Shuffle neighbors before adding
+    for (let i = neighbors.length - 1; i > 0; i--) {
+      const j = Math.floor(seededRandom(seed + queueIndex + i) * (i + 1));
+      [neighbors[i], neighbors[j]] = [neighbors[j], neighbors[i]];
+    }
+    queue.push(...neighbors);
+  }
+  
+  // Fill any remaining unassigned cells
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (regions[r][c] === -1) {
+        // Find nearest assigned neighbor
+        for (const [dr, dc] of [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]]) {
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] !== -1) {
+            regions[r][c] = regions[nr][nc];
+            break;
+          }
+        }
+        if (regions[r][c] === -1) {
+          // Find the smallest region and assign to it
+          const minRegion = regionSizes.indexOf(Math.min(...regionSizes));
+          regions[r][c] = minRegion;
+          regionSizes[minRegion]++;
+        }
+      }
+    }
   }
   
   return { size, regions, solution };
@@ -198,6 +195,9 @@ const QueensGame = () => {
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
   const [previousTime, setPreviousTime] = useState<number | null>(null);
   const [conflicts, setConflicts] = useState<Set<string>>(new Set());
+  const [hintIndex, setHintIndex] = useState(0);
+  const [hintCooldown, setHintCooldown] = useState(0);
+  const [lastHintCell, setLastHintCell] = useState<[number, number] | null>(null);
 
   // Check if user already completed today's puzzle
   useEffect(() => {
@@ -233,6 +233,17 @@ const QueensGame = () => {
     }
     return () => clearInterval(interval);
   }, [startTime, isComplete]);
+
+  // Hint cooldown timer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (hintCooldown > 0) {
+      interval = setInterval(() => {
+        setHintCooldown(prev => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [hintCooldown]);
 
   // Check for conflicts and completion
   useEffect(() => {
@@ -284,8 +295,8 @@ const QueensGame = () => {
     
     // Check completion - exactly one queen per row, column, and region, no conflicts
     if (queens.length === puzzle.size && newConflicts.size === 0) {
-      const rows = new Set(queens.map(([r, _]) => r));
-      const cols = new Set(queens.map(([_, c]) => c));
+      const rows = new Set(queens.map(([r]) => r));
+      const cols = new Set(queens.map(([, c]) => c));
       const regs = new Set(queens.map(([r, c]) => puzzle.regions[r][c]));
       
       if (rows.size === puzzle.size && cols.size === puzzle.size && regs.size === puzzle.size) {
@@ -338,6 +349,9 @@ const QueensGame = () => {
     
     if (!startTime) setStartTime(Date.now());
     
+    // Clear hint highlight when user clicks
+    setLastHintCell(null);
+    
     // Save history for undo
     setHistory(prev => [...prev, board.map(r => [...r])]);
     
@@ -361,6 +375,7 @@ const QueensGame = () => {
       const previousBoard = history[history.length - 1];
       setBoard(previousBoard);
       setHistory(prev => prev.slice(0, -1));
+      setLastHintCell(null);
     }
   };
 
@@ -372,21 +387,51 @@ const QueensGame = () => {
     setElapsedTime(0);
     setHasSubmitted(false);
     setConflicts(new Set());
+    setHintIndex(0);
+    setHintCooldown(0);
+    setLastHintCell(null);
   };
 
   const handleHint = () => {
-    // Find a cell where a queen should be placed and mark all cells in its row/column/region as X
-    for (let r = 0; r < puzzle.size; r++) {
-      for (let c = 0; c < puzzle.size; c++) {
-        if (puzzle.solution[r][c] && board[r][c] !== 'queen') {
-          toast({
-            title: 'Hint',
-            description: `Try placing a queen in row ${r + 1}, column ${c + 1}`,
-          });
-          return;
-        }
+    if (hintCooldown > 0) return;
+    
+    if (!startTime) setStartTime(Date.now());
+    
+    // Find next queen position that isn't already placed correctly
+    const unplacedQueens: [number, number][] = [];
+    
+    for (const [r, c] of puzzle.solution) {
+      if (board[r][c] !== 'queen') {
+        unplacedQueens.push([r, c]);
       }
     }
+    
+    if (unplacedQueens.length === 0) {
+      toast({
+        title: 'All queens placed!',
+        description: 'Check for any conflicts.',
+      });
+      return;
+    }
+    
+    // Get the next hint (cycle through unplaced queens)
+    const nextHint = unplacedQueens[hintIndex % unplacedQueens.length];
+    const [hintRow, hintCol] = nextHint;
+    
+    // Highlight the hint cell
+    setLastHintCell(nextHint);
+    
+    // Show toast with hint
+    toast({
+      title: `Hint ${hintIndex + 1}`,
+      description: `A queen belongs in row ${hintRow + 1}, column ${hintCol + 1}`,
+    });
+    
+    // Move to next hint for next time
+    setHintIndex(prev => prev + 1);
+    
+    // Start 10 second cooldown
+    setHintCooldown(10);
   };
 
   const getRegionColor = (regionId: number) => {
@@ -535,6 +580,7 @@ const QueensGame = () => {
                       const cellState = board[row][col];
                       const regionColor = getRegionColor(puzzle.regions[row][col]);
                       const hasConflict = conflicts.has(`${row},${col}`);
+                      const isHintCell = lastHintCell && lastHintCell[0] === row && lastHintCell[1] === col;
                       
                       return (
                         <div
@@ -544,6 +590,7 @@ const QueensGame = () => {
                             transition-all duration-150 aspect-square
                             ${regionColor}
                             ${hasConflict ? 'ring-2 ring-red-500 ring-inset' : ''}
+                            ${isHintCell ? 'ring-2 ring-yellow-400 ring-inset animate-pulse' : ''}
                             hover:brightness-110
                           `}
                           onClick={() => handleCellClick(row, col)}
@@ -567,9 +614,14 @@ const QueensGame = () => {
                 <Undo2 className="w-4 h-4 mr-2" />
                 Undo
               </Button>
-              <Button onClick={handleHint} variant="outline" className="flex-1">
+              <Button 
+                onClick={handleHint} 
+                variant="outline" 
+                className="flex-1"
+                disabled={hintCooldown > 0}
+              >
                 <Lightbulb className="w-4 h-4 mr-2" />
-                Hint
+                {hintCooldown > 0 ? `Wait ${hintCooldown}s` : 'Hint'}
               </Button>
             </div>
 
