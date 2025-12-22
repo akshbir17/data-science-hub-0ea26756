@@ -43,18 +43,20 @@ const Auth = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [loginMethod, setLoginMethod] = useState<'usn' | 'email'>('usn');
   
   // Student form
   const [studentUSN, setStudentUSN] = useState('');
   const [studentPassword, setStudentPassword] = useState('');
   const [studentName, setStudentName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
+  const [studentLoginEmail, setStudentLoginEmail] = useState('');
   
   // Admin form
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
 
-  const { signIn, signUp, user, resetPassword } = useAuth();
+  const { signIn, signUp, user, resetPassword, signInWithUSN } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -106,34 +108,70 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Validate USN
-      const usnResult = usnSchema.safeParse(studentUSN);
-      if (!usnResult.success) {
-        toast({ title: 'Validation Error', description: usnResult.error.errors[0].message, variant: 'destructive' });
-        setLoading(false);
-        return;
-      }
-
-      const passwordResult = passwordSchema.safeParse(studentPassword);
-      if (!passwordResult.success) {
-        toast({ title: 'Validation Error', description: passwordResult.error.errors[0].message, variant: 'destructive' });
-        setLoading(false);
-        return;
-      }
-
-      // Use USN as email format for students
-      const email = `${studentUSN.toLowerCase()}@student.portal`;
-
       if (isLogin) {
-        const { error } = await signIn(email, studentPassword);
-        if (error) {
-          toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+        // Login with either USN or Email
+        if (loginMethod === 'usn') {
+          const usnResult = usnSchema.safeParse(studentUSN);
+          if (!usnResult.success) {
+            toast({ title: 'Validation Error', description: usnResult.error.errors[0].message, variant: 'destructive' });
+            setLoading(false);
+            return;
+          }
+
+          const passwordResult = passwordSchema.safeParse(studentPassword);
+          if (!passwordResult.success) {
+            toast({ title: 'Validation Error', description: passwordResult.error.errors[0].message, variant: 'destructive' });
+            setLoading(false);
+            return;
+          }
+
+          const { error } = await signInWithUSN(studentUSN.toUpperCase(), studentPassword);
+          if (error) {
+            toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+          } else {
+            toast({ title: 'Welcome back!', description: 'Successfully logged in.' });
+            navigate('/dashboard');
+          }
         } else {
-          toast({ title: 'Welcome back!', description: 'Successfully logged in.' });
-          navigate('/dashboard');
+          // Login with email
+          const emailResult = emailSchema.safeParse(studentLoginEmail);
+          if (!emailResult.success) {
+            toast({ title: 'Validation Error', description: emailResult.error.errors[0].message, variant: 'destructive' });
+            setLoading(false);
+            return;
+          }
+
+          const passwordResult = passwordSchema.safeParse(studentPassword);
+          if (!passwordResult.success) {
+            toast({ title: 'Validation Error', description: passwordResult.error.errors[0].message, variant: 'destructive' });
+            setLoading(false);
+            return;
+          }
+
+          const { error } = await signIn(studentLoginEmail, studentPassword);
+          if (error) {
+            toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+          } else {
+            toast({ title: 'Welcome back!', description: 'Successfully logged in.' });
+            navigate('/dashboard');
+          }
         }
       } else {
-        // Validate name for signup
+        // Signup - requires USN, Email, Name, Password
+        const usnResult = usnSchema.safeParse(studentUSN);
+        if (!usnResult.success) {
+          toast({ title: 'Validation Error', description: usnResult.error.errors[0].message, variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+
+        const emailResult = emailSchema.safeParse(studentEmail);
+        if (!emailResult.success) {
+          toast({ title: 'Validation Error', description: emailResult.error.errors[0].message, variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+
         const nameResult = nameSchema.safeParse(studentName);
         if (!nameResult.success) {
           toast({ title: 'Validation Error', description: nameResult.error.errors[0].message, variant: 'destructive' });
@@ -141,25 +179,22 @@ const Auth = () => {
           return;
         }
 
-        // Validate email for signup (optional but if provided must be valid)
-        if (studentEmail) {
-          const emailResult = emailSchema.safeParse(studentEmail);
-          if (!emailResult.success) {
-            toast({ title: 'Validation Error', description: emailResult.error.errors[0].message, variant: 'destructive' });
-            setLoading(false);
-            return;
-          }
+        const passwordResult = passwordSchema.safeParse(studentPassword);
+        if (!passwordResult.success) {
+          toast({ title: 'Validation Error', description: passwordResult.error.errors[0].message, variant: 'destructive' });
+          setLoading(false);
+          return;
         }
 
-        const { error } = await signUp(email, studentPassword, {
+        const { error } = await signUp(studentEmail, studentPassword, {
           full_name: studentName.trim(),
           usn: studentUSN.toUpperCase(),
           role: 'student',
-          email: studentEmail.trim() || undefined,
+          email: studentEmail.trim(),
         });
         if (error) {
           if (error.message.includes('already registered')) {
-            toast({ title: 'Account Exists', description: 'This USN is already registered. Please login instead.', variant: 'destructive' });
+            toast({ title: 'Account Exists', description: 'This email is already registered. Please login instead.', variant: 'destructive' });
           } else {
             toast({ title: 'Registration Failed', description: error.message, variant: 'destructive' });
           }
@@ -267,7 +302,7 @@ const Auth = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="studentEmail" className="text-foreground">
-                          Email Address <span className="text-muted-foreground text-xs">(for password recovery)</span>
+                          Email Address <span className="text-destructive">*</span>
                         </Label>
                         <Input
                           id="studentEmail"
@@ -275,22 +310,80 @@ const Auth = () => {
                           placeholder="your.email@example.com"
                           value={studentEmail}
                           onChange={(e) => setStudentEmail(e.target.value)}
+                          required
                           className="bg-input border-border/50 rounded-xl focus:border-primary"
+                        />
+                        <p className="text-xs text-muted-foreground">Required for password recovery</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
+                        <Input
+                          id="usn"
+                          placeholder="e.g., 3GN24CD000"
+                          value={studentUSN}
+                          onChange={(e) => setStudentUSN(e.target.value.toUpperCase())}
+                          required
+                          className="bg-input border-border/50 rounded-xl uppercase focus:border-primary"
                         />
                       </div>
                     </>
                   )}
-                  <div className="space-y-2">
-                    <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
-                    <Input
-                      id="usn"
-                      placeholder="e.g., 3GN24CD000"
-                      value={studentUSN}
-                      onChange={(e) => setStudentUSN(e.target.value.toUpperCase())}
-                      required
-                      className="bg-input border-border/50 rounded-xl uppercase focus:border-primary"
-                    />
-                  </div>
+                  {isLogin && (
+                    <>
+                      {/* Login method toggle */}
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <button
+                          type="button"
+                          onClick={() => setLoginMethod('usn')}
+                          className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
+                            loginMethod === 'usn' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'
+                          }`}
+                        >
+                          Login with USN
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLoginMethod('email')}
+                          className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
+                            loginMethod === 'email' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'
+                          }`}
+                        >
+                          Login with Email
+                        </button>
+                      </div>
+                      
+                      {loginMethod === 'usn' ? (
+                        <div className="space-y-2">
+                          <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
+                          <Input
+                            id="usn"
+                            placeholder="e.g., 3GN24CD000"
+                            value={studentUSN}
+                            onChange={(e) => setStudentUSN(e.target.value.toUpperCase())}
+                            required
+                            className="bg-input border-border/50 rounded-xl uppercase focus:border-primary"
+                          />
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Label htmlFor="studentLoginEmail" className="text-foreground">Email Address</Label>
+                          <Input
+                            id="studentLoginEmail"
+                            type="email"
+                            placeholder="your.email@example.com"
+                            value={studentLoginEmail}
+                            onChange={(e) => setStudentLoginEmail(e.target.value)}
+                            required
+                            className="bg-input border-border/50 rounded-xl focus:border-primary"
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="studentPassword" className="text-foreground">Password</Label>
