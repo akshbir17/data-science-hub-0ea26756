@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Settings, Bell, LogOut, ChevronRight, Sun, Moon, Share2, Globe, Check } from 'lucide-react';
+import { User, Settings, Bell, LogOut, ChevronRight, Sun, Moon, Share2, Globe, Check, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage, languages } from '@/contexts/LanguageContext';
@@ -18,6 +18,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import ProfileEditDialog from './ProfileEditDialog';
 import ShareDialog from './ShareDialog';
@@ -31,6 +38,7 @@ const UserProfileDropdown = () => {
   const { toast } = useToast();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -200,6 +208,18 @@ const UserProfileDropdown = () => {
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </DropdownMenuItem>
+
+            {/* Help/Support Option */}
+            <DropdownMenuItem 
+              onClick={() => setIsHelpOpen(true)}
+              className="flex items-center justify-between py-2.5 px-3 cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                <span>Help & Support</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </DropdownMenuItem>
           </div>
 
           <DropdownMenuSeparator />
@@ -219,6 +239,48 @@ const UserProfileDropdown = () => {
 
       <ProfileEditDialog open={isProfileOpen} onOpenChange={setIsProfileOpen} />
       <ShareDialog open={isShareOpen} onOpenChange={setIsShareOpen} />
+      
+      {/* Help/Support Dialog */}
+      <Dialog open={isHelpOpen} onOpenChange={setIsHelpOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-primary" />
+              Help & Support
+            </DialogTitle>
+            <DialogDescription>
+              Need assistance? Contact our support team.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-4 rounded-xl bg-secondary/50 border border-border/50">
+              <div className="flex items-center gap-3 mb-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                    AS
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold text-foreground">Akshbir Singh Seehra</p>
+                  <p className="text-sm text-muted-foreground">Developer & Support</p>
+                </div>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">USN:</span>
+                  <span className="font-medium text-foreground">3GN24CD006</span>
+                </div>
+                <p className="text-muted-foreground">
+                  For any help, queries, or issues with the portal, feel free to reach out!
+                </p>
+              </div>
+            </div>
+            <div className="text-center text-sm text-muted-foreground">
+              <p>You can also report bugs or suggest features.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
