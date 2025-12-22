@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Upload, Calculator, Gamepad2 } from 'lucide-react';
+import { BookOpen, Upload, Calculator, Gamepad2, Brain } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import UserProfileDropdown from '@/components/profile/UserProfileDropdown';
 
@@ -30,6 +30,13 @@ const Header = () => {
               <Button variant="ghost" size="sm" className="gap-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50">
                 <Gamepad2 className="w-4 h-4" />
                 <span className="hidden sm:inline">{t('games')}</span>
+              </Button>
+            </Link>
+
+            <Link to="/quiz">
+              <Button variant="ghost" size="sm" className="gap-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50">
+                <Brain className="w-4 h-4" />
+                <span className="hidden sm:inline">{t('quiz')}</span>
               </Button>
             </Link>
             
