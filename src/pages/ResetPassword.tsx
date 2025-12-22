@@ -72,10 +72,16 @@ const ResetPassword = () => {
         return;
       }
 
-      // Update the password
-      const { error } = await supabase.auth.updateUser({
+      // Update the password with timeout
+      const updatePromise = supabase.auth.updateUser({
         password: password
       });
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timed out. Please try again.')), 15000)
+      );
+
+      const { error } = await Promise.race([updatePromise, timeoutPromise]) as { error: Error | null };
 
       if (error) {
         toast({ 
@@ -90,10 +96,10 @@ const ResetPassword = () => {
           description: 'Your password has been successfully changed.' 
         });
         
-        // Redirect to dashboard after 2 seconds
+        // Redirect to dashboard after 1.5 seconds
         setTimeout(() => {
           navigate('/dashboard');
-        }, 2000);
+        }, 1500);
       }
     } catch (err) {
       toast({ 
