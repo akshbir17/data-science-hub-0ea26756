@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, ShieldCheck, BookOpen, Loader2 } from 'lucide-react';
+import { GraduationCap, ShieldCheck, BookOpen, Loader2, Mail } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Invalid email address');
@@ -39,17 +40,21 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<'student' | 'admin'>('student');
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   
   // Student form
   const [studentUSN, setStudentUSN] = useState('');
   const [studentPassword, setStudentPassword] = useState('');
   const [studentName, setStudentName] = useState('');
+  const [studentEmail, setStudentEmail] = useState('');
   
   // Admin form
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
 
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -65,6 +70,36 @@ const Auth = () => {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+
+    try {
+      const emailResult = emailSchema.safeParse(resetEmail);
+      if (!emailResult.success) {
+        toast({ title: 'Validation Error', description: emailResult.error.errors[0].message, variant: 'destructive' });
+        setResetLoading(false);
+        return;
+      }
+
+      const { error } = await resetPassword(resetEmail);
+      if (error) {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ 
+          title: 'Recovery Email Sent', 
+          description: 'Check your email for the password reset link.' 
+        });
+        setForgotPasswordOpen(false);
+        setResetEmail('');
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleStudentAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,10 +134,18 @@ const Auth = () => {
         }
       } else {
         // Validate name for signup
-        if (!isLogin) {
-          const nameResult = nameSchema.safeParse(studentName);
-          if (!nameResult.success) {
-            toast({ title: 'Validation Error', description: nameResult.error.errors[0].message, variant: 'destructive' });
+        const nameResult = nameSchema.safeParse(studentName);
+        if (!nameResult.success) {
+          toast({ title: 'Validation Error', description: nameResult.error.errors[0].message, variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+
+        // Validate email for signup (optional but if provided must be valid)
+        if (studentEmail) {
+          const emailResult = emailSchema.safeParse(studentEmail);
+          if (!emailResult.success) {
+            toast({ title: 'Validation Error', description: emailResult.error.errors[0].message, variant: 'destructive' });
             setLoading(false);
             return;
           }
@@ -112,6 +155,7 @@ const Auth = () => {
           full_name: studentName.trim(),
           usn: studentUSN.toUpperCase(),
           role: 'student',
+          email: studentEmail.trim() || undefined,
         });
         if (error) {
           if (error.message.includes('already registered')) {
@@ -209,17 +253,32 @@ const Auth = () => {
               <TabsContent value="student">
                 <form onSubmit={handleStudentAuth} className="space-y-4">
                   {!isLogin && (
-                    <div className="space-y-2">
-                      <Label htmlFor="studentName" className="text-foreground">Full Name</Label>
-                      <Input
-                        id="studentName"
-                        placeholder="Enter your full name"
-                        value={studentName}
-                        onChange={(e) => setStudentName(e.target.value)}
-                        required={!isLogin}
-                        className="bg-input border-border/50 rounded-xl focus:border-primary"
-                      />
-                    </div>
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="studentName" className="text-foreground">Full Name</Label>
+                        <Input
+                          id="studentName"
+                          placeholder="Enter your full name"
+                          value={studentName}
+                          onChange={(e) => setStudentName(e.target.value)}
+                          required={!isLogin}
+                          className="bg-input border-border/50 rounded-xl focus:border-primary"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="studentEmail" className="text-foreground">
+                          Email Address <span className="text-muted-foreground text-xs">(for password recovery)</span>
+                        </Label>
+                        <Input
+                          id="studentEmail"
+                          type="email"
+                          placeholder="your.email@example.com"
+                          value={studentEmail}
+                          onChange={(e) => setStudentEmail(e.target.value)}
+                          className="bg-input border-border/50 rounded-xl focus:border-primary"
+                        />
+                      </div>
+                    </>
                   )}
                   <div className="space-y-2">
                     <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
@@ -233,7 +292,54 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="studentPassword" className="text-foreground">Password</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="studentPassword" className="text-foreground">Password</Label>
+                      {isLogin && (
+                        <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+                          <DialogTrigger asChild>
+                            <button
+                              type="button"
+                              className="text-xs text-primary hover:underline"
+                            >
+                              Forgot password?
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="glass-card border-border/30">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center gap-2">
+                                <Mail className="w-5 h-5 text-primary" />
+                                Reset Password
+                              </DialogTitle>
+                              <DialogDescription>
+                                Enter your email address and we'll send you a link to reset your password.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleForgotPassword} className="space-y-4 mt-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="resetEmail">Email Address</Label>
+                                <Input
+                                  id="resetEmail"
+                                  type="email"
+                                  placeholder="your.email@example.com"
+                                  value={resetEmail}
+                                  onChange={(e) => setResetEmail(e.target.value)}
+                                  required
+                                  className="bg-input border-border/50 rounded-xl focus:border-primary"
+                                />
+                              </div>
+                              <Button 
+                                type="submit" 
+                                className="w-full gradient-purple rounded-xl"
+                                disabled={resetLoading}
+                              >
+                                {resetLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                Send Recovery Email
+                              </Button>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
                     <Input
                       id="studentPassword"
                       type="password"
@@ -266,7 +372,52 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="adminPassword" className="text-foreground">Password</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="adminPassword" className="text-foreground">Password</Label>
+                      <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+                        <DialogTrigger asChild>
+                          <button
+                            type="button"
+                            className="text-xs text-primary hover:underline"
+                          >
+                            Forgot password?
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="glass-card border-border/30">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                              <Mail className="w-5 h-5 text-primary" />
+                              Reset Password
+                            </DialogTitle>
+                            <DialogDescription>
+                              Enter your email address and we'll send you a link to reset your password.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={handleForgotPassword} className="space-y-4 mt-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="resetEmailAdmin">Email Address</Label>
+                              <Input
+                                id="resetEmailAdmin"
+                                type="email"
+                                placeholder="admin@university.edu"
+                                value={resetEmail}
+                                onChange={(e) => setResetEmail(e.target.value)}
+                                required
+                                className="bg-input border-border/50 rounded-xl focus:border-primary"
+                              />
+                            </div>
+                            <Button 
+                              type="submit" 
+                              className="w-full gradient-purple rounded-xl"
+                              disabled={resetLoading}
+                            >
+                              {resetLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                              Send Recovery Email
+                            </Button>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                     <Input
                       id="adminPassword"
                       type="password"
