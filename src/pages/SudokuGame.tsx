@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, RotateCcw, Trophy, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Trophy, Clock, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import GameLeaderboard from '@/components/games/GameLeaderboard';
 
@@ -27,43 +27,57 @@ const getPuzzleNumber = () => {
   return diffDays + 1;
 };
 
-// Generate a valid 4x4 Sudoku solution
+// Generate a valid 9x9 Sudoku solution using backtracking
 const generateSolution = (seed: number): number[][] => {
-  const solution: number[][] = [
-    [1, 2, 3, 4],
-    [3, 4, 1, 2],
-    [2, 1, 4, 3],
-    [4, 3, 2, 1]
-  ];
+  const grid: number[][] = Array(9).fill(null).map(() => Array(9).fill(0));
   
-  // Shuffle rows within each 2-row block
-  for (let block = 0; block < 2; block++) {
-    if (seededRandom(seed + block) > 0.5) {
-      const row1 = block * 2;
-      const row2 = block * 2 + 1;
-      [solution[row1], solution[row2]] = [solution[row2], solution[row1]];
+  const isValid = (row: number, col: number, num: number): boolean => {
+    // Check row
+    for (let x = 0; x < 9; x++) {
+      if (grid[row][x] === num) return false;
     }
-  }
-  
-  // Shuffle columns within each 2-column block
-  for (let block = 0; block < 2; block++) {
-    if (seededRandom(seed + block + 10) > 0.5) {
-      const col1 = block * 2;
-      const col2 = block * 2 + 1;
-      for (let row = 0; row < 4; row++) {
-        [solution[row][col1], solution[row][col2]] = [solution[row][col2], solution[row][col1]];
+    // Check column
+    for (let x = 0; x < 9; x++) {
+      if (grid[x][col] === num) return false;
+    }
+    // Check 3x3 box
+    const boxRow = Math.floor(row / 3) * 3;
+    const boxCol = Math.floor(col / 3) * 3;
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        if (grid[boxRow + i][boxCol + j] === num) return false;
       }
     }
-  }
-  
-  // Shuffle numbers (1-4)
-  const numMap = [1, 2, 3, 4];
-  for (let i = 3; i > 0; i--) {
-    const j = Math.floor(seededRandom(seed + i + 20) * (i + 1));
-    [numMap[i], numMap[j]] = [numMap[j], numMap[i]];
-  }
-  
-  return solution.map(row => row.map(cell => numMap[cell - 1]));
+    return true;
+  };
+
+  const solve = (seedOffset: number): boolean => {
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (grid[row][col] === 0) {
+          // Shuffle numbers 1-9 based on seed for variety
+          const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+          for (let i = nums.length - 1; i > 0; i--) {
+            const j = Math.floor(seededRandom(seed + seedOffset + row * 9 + col + i) * (i + 1));
+            [nums[i], nums[j]] = [nums[j], nums[i]];
+          }
+          
+          for (const num of nums) {
+            if (isValid(row, col, num)) {
+              grid[row][col] = num;
+              if (solve(seedOffset + 1)) return true;
+              grid[row][col] = 0;
+            }
+          }
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  solve(0);
+  return grid;
 };
 
 // Create puzzle by removing numbers
@@ -71,10 +85,10 @@ const generatePuzzle = (seed: number) => {
   const solution = generateSolution(seed);
   const puzzle = solution.map(row => [...row]);
   
-  // Remove 8-10 numbers (keeping 6-8 clues)
+  // For 9x9, remove 40-50 numbers (keeping 31-41 clues for medium difficulty)
   const positions: [number, number][] = [];
-  for (let i = 0; i < 4; i++) {
-    for (let j = 0; j < 4; j++) {
+  for (let i = 0; i < 9; i++) {
+    for (let j = 0; j < 9; j++) {
       positions.push([i, j]);
     }
   }
@@ -85,8 +99,8 @@ const generatePuzzle = (seed: number) => {
     [positions[i], positions[j]] = [positions[j], positions[i]];
   }
   
-  // Remove 8-10 numbers
-  const toRemove = 8 + Math.floor(seededRandom(seed + 200) * 3);
+  // Remove 40-50 numbers
+  const toRemove = 40 + Math.floor(seededRandom(seed + 200) * 11);
   for (let i = 0; i < toRemove; i++) {
     const [row, col] = positions[i];
     puzzle[row][col] = 0;
@@ -195,7 +209,7 @@ const SudokuGame = () => {
     // Check row
     const rowNums = newGrid[row].filter(n => n !== 0);
     if (rowNums.length !== new Set(rowNums).size) {
-      for (let c = 0; c < 4; c++) {
+      for (let c = 0; c < 9; c++) {
         if (newGrid[row][c] === num) newErrors.add(`${row},${c}`);
       }
     }
@@ -203,23 +217,23 @@ const SudokuGame = () => {
     // Check column
     const colNums = newGrid.map(r => r[col]).filter(n => n !== 0);
     if (colNums.length !== new Set(colNums).size) {
-      for (let r = 0; r < 4; r++) {
+      for (let r = 0; r < 9; r++) {
         if (newGrid[r][col] === num) newErrors.add(`${r},${col}`);
       }
     }
     
-    // Check 2x2 box
-    const boxRow = Math.floor(row / 2) * 2;
-    const boxCol = Math.floor(col / 2) * 2;
+    // Check 3x3 box
+    const boxRow = Math.floor(row / 3) * 3;
+    const boxCol = Math.floor(col / 3) * 3;
     const boxNums: number[] = [];
-    for (let r = boxRow; r < boxRow + 2; r++) {
-      for (let c = boxCol; c < boxCol + 2; c++) {
+    for (let r = boxRow; r < boxRow + 3; r++) {
+      for (let c = boxCol; c < boxCol + 3; c++) {
         if (newGrid[r][c] !== 0) boxNums.push(newGrid[r][c]);
       }
     }
     if (boxNums.length !== new Set(boxNums).size) {
-      for (let r = boxRow; r < boxRow + 2; r++) {
-        for (let c = boxCol; c < boxCol + 2; c++) {
+      for (let r = boxRow; r < boxRow + 3; r++) {
+        for (let c = boxCol; c < boxCol + 3; c++) {
           if (newGrid[r][c] === num) newErrors.add(`${r},${c}`);
         }
       }
@@ -250,7 +264,6 @@ const SudokuGame = () => {
   };
 
   const isOriginal = (row: number, col: number) => puzzle[row][col] !== 0;
-  const isCellSelected = (row: number, col: number) => selectedCell?.[0] === row && selectedCell?.[1] === col;
   const hasError = (row: number, col: number) => errors.has(`${row},${col}`);
 
   if (showLeaderboard) {
@@ -287,7 +300,7 @@ const SudokuGame = () => {
               </Link>
               <div>
                 <h1 className="text-lg font-semibold">Mini Sudoku #{puzzleNum}</h1>
-                <p className="text-xs text-muted-foreground">Fill with 1-4</p>
+                <p className="text-xs text-muted-foreground">Fill with 1-9</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -329,28 +342,32 @@ const SudokuGame = () => {
         ) : (
           <>
             <Card className="glass-card border-border/30 mb-4">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-4 gap-1 mx-auto max-w-[280px]">
+              <CardContent className="p-3">
+                <div 
+                  className="grid gap-0.5 mx-auto"
+                  style={{ 
+                    gridTemplateColumns: 'repeat(9, 1fr)',
+                    maxWidth: '360px'
+                  }}
+                >
                   {grid.map((row, rowIndex) =>
                     row.map((cell, colIndex) => (
                       <button
                         key={`${rowIndex}-${colIndex}`}
                         onClick={() => handleCellClick(rowIndex, colIndex)}
                         className={`
-                          aspect-square flex items-center justify-center text-2xl font-bold rounded-lg
+                          aspect-square flex items-center justify-center text-sm sm:text-base font-bold rounded-sm
                           transition-all
                           ${isOriginal(rowIndex, colIndex) 
                             ? 'bg-muted text-foreground cursor-default' 
                             : 'bg-muted/30 hover:bg-muted/50 cursor-pointer'
                           }
-                          ${selectedCell?.[0] === rowIndex && selectedCell?.[1] === colIndex ? 'ring-2 ring-primary' : ''}
+                          ${selectedCell?.[0] === rowIndex && selectedCell?.[1] === colIndex ? 'ring-2 ring-primary z-10' : ''}
                           ${hasError(rowIndex, colIndex) ? 'bg-destructive/20 text-destructive' : ''}
-                          ${colIndex === 1 ? 'mr-1' : ''}
-                          ${rowIndex === 1 ? 'mb-1' : ''}
                         `}
                         style={{
-                          borderRight: colIndex === 1 ? '2px solid hsl(var(--border))' : undefined,
-                          borderBottom: rowIndex === 1 ? '2px solid hsl(var(--border))' : undefined,
+                          marginRight: (colIndex === 2 || colIndex === 5) ? '4px' : undefined,
+                          marginBottom: (rowIndex === 2 || rowIndex === 5) ? '4px' : undefined,
                         }}
                       >
                         {cell !== 0 ? cell : ''}
@@ -362,13 +379,13 @@ const SudokuGame = () => {
             </Card>
 
             {/* Number buttons */}
-            <div className="grid grid-cols-5 gap-2 mb-4 max-w-[280px] mx-auto">
-              {[1, 2, 3, 4].map(num => (
+            <div className="grid grid-cols-5 gap-2 mb-4 max-w-[360px] mx-auto">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                 <Button
                   key={num}
                   onClick={() => handleNumberInput(num)}
                   variant="outline"
-                  className="aspect-square text-xl font-bold"
+                  className="aspect-square text-lg font-bold"
                   disabled={!selectedCell}
                 >
                   {num}
