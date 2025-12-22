@@ -24,8 +24,19 @@ import {
   FolderOpen,
   BookOpen,
   ClipboardList,
-  Pencil
+  Pencil,
+  Trash2
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -61,6 +72,9 @@ const Subject = () => {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingResource, setDeletingResource] = useState<Resource | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -181,6 +195,44 @@ const Subject = () => {
     }
   };
 
+  const handleDeleteClick = (resource: Resource) => {
+    setDeletingResource(resource);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingResource) return;
+    
+    setDeleting(true);
+    try {
+      // Delete from storage first
+      const { error: storageError } = await supabase.storage
+        .from('resources')
+        .remove([deletingResource.file_path]);
+
+      if (storageError) {
+        console.error('Storage delete error:', storageError);
+      }
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('resources')
+        .delete()
+        .eq('id', deletingResource.id);
+
+      if (dbError) throw dbError;
+
+      setResources(prev => prev.filter(r => r.id !== deletingResource.id));
+      toast.success('Resource deleted successfully');
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+      toast.error('Failed to delete resource');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return 'Unknown size';
     if (bytes < 1024) return `${bytes} B`;
@@ -239,15 +291,26 @@ const Subject = () => {
 
           <div className="flex gap-2 shrink-0">
             {isAdmin && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleEdit(resource)}
-                className="gap-2 rounded-xl"
-              >
-                <Pencil className="w-4 h-4" />
-                Edit
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEdit(resource)}
+                  className="gap-2 rounded-xl"
+                >
+                  <Pencil className="w-4 h-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteClick(resource)}
+                  className="gap-2 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </Button>
+              </>
             )}
             <Button
               variant="outline"
@@ -420,6 +483,29 @@ const Subject = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Resource</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingResource?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
