@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import AIChatbot from "@/components/AIChatbot";
 import Index from "./pages/Index";
@@ -24,30 +25,32 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/calculator" element={<Calculator />} />
-              <Route path="/games" element={<Games />} />
-              <Route path="/games/zip" element={<ZipGame />} />
-              <Route path="/games/sudoku" element={<SudokuGame />} />
-              <Route element={<DashboardLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/subject/:id" element={<Subject />} />
-                <Route path="/subject/:id/quiz/:quizId" element={<Quiz />} />
-                <Route path="/admin/upload" element={<AdminUpload />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <AIChatbot />
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/calculator" element={<Calculator />} />
+                <Route path="/games" element={<Games />} />
+                <Route path="/games/zip" element={<ZipGame />} />
+                <Route path="/games/sudoku" element={<SudokuGame />} />
+                <Route element={<DashboardLayout />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/subject/:id" element={<Subject />} />
+                  <Route path="/subject/:id/quiz/:quizId" element={<Quiz />} />
+                  <Route path="/admin/upload" element={<AdminUpload />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <AIChatbot />
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

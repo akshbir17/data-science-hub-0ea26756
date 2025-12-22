@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { User, Settings, Bell, LogOut, ChevronRight, Sun, Moon, Share2 } from 'lucide-react';
+import { User, Settings, Bell, LogOut, ChevronRight, Sun, Moon, Share2, Globe, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage, languages } from '@/contexts/LanguageContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -24,6 +25,7 @@ import ShareDialog from './ShareDialog';
 const UserProfileDropdown = () => {
   const { user, userRole, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
   const { isAllowed, toggleNotifications } = useNotifications();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -114,8 +116,9 @@ const UserProfileDropdown = () => {
                 </div>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
-                <DropdownMenuSubContent className="w-48 bg-card border border-border shadow-lg z-50">
-                  <div className="p-2">
+                <DropdownMenuSubContent className="w-52 bg-card border border-border shadow-lg z-50">
+                  <div className="p-2 space-y-3">
+                    {/* Theme Toggle */}
                     <div className="flex items-center justify-between py-2 px-2">
                       <span className="text-sm">Theme</span>
                       <div className="flex items-center gap-1">
@@ -139,6 +142,30 @@ const UserProfileDropdown = () => {
                         >
                           <Moon className="h-4 w-4" />
                         </button>
+                      </div>
+                    </div>
+                    
+                    {/* Language Selector */}
+                    <div className="border-t border-border pt-2">
+                      <div className="flex items-center gap-2 px-2 pb-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">Language</span>
+                      </div>
+                      <div className="space-y-1">
+                        {languages.map((lang) => (
+                          <button
+                            key={lang.code}
+                            onClick={() => setLanguage(lang.code)}
+                            className={`w-full flex items-center justify-between py-1.5 px-3 rounded-md text-sm transition-colors ${
+                              language === lang.code 
+                                ? 'bg-primary/10 text-primary' 
+                                : 'hover:bg-muted'
+                            }`}
+                          >
+                            <span>{lang.name} ({lang.nativeName})</span>
+                            {language === lang.code && <Check className="h-4 w-4" />}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
