@@ -10,12 +10,12 @@ const GameCard = ({ game }: { game: { id: string; name: string; description: str
   const { streak } = useStreak(activityType);
 
   return (
-    <Link to={`/games/${game.id}`}>
-      <Card className="glass-card border-border/30 hover:border-primary/50 transition-all cursor-pointer group h-full">
+    <Link to={`/games/${game.id}`} className="perspective-1000">
+      <Card className="glass-card border-border/30 hover:border-primary/50 transition-all duration-300 cursor-pointer group h-full transform-gpu hover:rotate-y-3 hover:-rotate-x-3 hover:scale-105 hover:shadow-xl hover:shadow-primary/10">
         <CardHeader>
           <div className="flex items-start justify-between">
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${game.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-              <game.icon className="w-8 h-8 text-white" />
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${game.color} flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 shadow-lg`}>
+              <game.icon className="w-8 h-8 text-white drop-shadow-md" />
             </div>
             <StreakBadge 
               currentStreak={streak.current_streak} 
@@ -47,7 +47,7 @@ const Games = () => {
     {
       id: 'sudoku',
       name: 'Mini Sudoku',
-      description: 'Fill the 4x4 grid with numbers 1-4',
+      description: 'Fill the 6x6 grid with numbers 1-6',
       icon: Grid3X3,
       color: 'from-blue-500 to-purple-500',
     },

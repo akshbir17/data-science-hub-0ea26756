@@ -287,6 +287,21 @@ const ZipGame = () => {
     setIsDrawing(false);
   };
 
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDrawing || isComplete) return;
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element) {
+      const cellData = element.getAttribute('data-cell');
+      if (cellData) {
+        const [row, col] = cellData.split(',').map(Number);
+        handleCellInteraction(row, col);
+      }
+    }
+  }, [isDrawing, isComplete, handleCellInteraction]);
+
   const handleUndo = () => {
     if (userPath.length > 1) {
       setUserPath(userPath.slice(0, -1));
@@ -370,10 +385,10 @@ const ZipGame = () => {
 
       <main className="container mx-auto px-4 py-8 max-w-lg">
         {isComplete ? (
-          <Card className="glass-card border-border/30 mb-6">
+          <Card className="glass-card border-border/30 mb-6 animate-scale-in">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
-                <div className="p-4 rounded-full bg-gradient-to-br from-orange-500 to-red-500">
+                <div className="p-4 rounded-full bg-gradient-to-br from-orange-500 to-red-500 animate-bounce">
                   <Trophy className="w-8 h-8 text-white" />
                 </div>
               </div>
@@ -401,12 +416,14 @@ const ZipGame = () => {
             <Card className="glass-card border-border/30 mb-4">
               <CardContent className="p-4">
                 <div 
-                  className="grid gap-1 mx-auto select-none"
+                  className="grid gap-1 mx-auto select-none touch-none"
                   style={{ 
                     gridTemplateColumns: `repeat(${puzzle.size}, 1fr)`,
                     maxWidth: '320px',
                     aspectRatio: '1'
                   }}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleMouseUp}
                 >
                   {Array.from({ length: puzzle.size }).map((_, row) =>
                     Array.from({ length: puzzle.size }).map((_, col) => {
@@ -418,6 +435,7 @@ const ZipGame = () => {
                       return (
                         <div
                           key={`${row}-${col}`}
+                          data-cell={`${row},${col}`}
                           className={`
                             relative flex items-center justify-center rounded-lg cursor-pointer
                             transition-all duration-150
