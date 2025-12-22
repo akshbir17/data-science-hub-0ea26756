@@ -386,12 +386,9 @@ const DailyQuiz = () => {
                           </div>
                           <div className="flex-1">
                             <p className="font-medium text-foreground">
-                              {entry.profiles?.full_name || 'Anonymous'}
+                              {isCurrentUser ? (entry.profiles?.full_name || 'You') : 'Unknown'}
                               {isCurrentUser && <span className="text-primary ml-2">(You)</span>}
                             </p>
-                            {entry.profiles?.usn && (
-                              <p className="text-sm text-muted-foreground">{entry.profiles.usn}</p>
-                            )}
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-lg text-foreground">{entry.score}/5</p>
