@@ -65,10 +65,11 @@ const DailyQuiz = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [scoreSaved, setScoreSaved] = useState(false);
+  const [userExistingScore, setUserExistingScore] = useState<{score: number; subjectName: string} | null>(null);
 
   useEffect(() => {
     fetchSubjects();
-  }, []);
+  }, [user]);
 
   const fetchSubjects = async () => {
     try {
@@ -164,9 +165,36 @@ const DailyQuiz = () => {
     }
   };
 
+  const checkExistingQuizAttempt = async (subjectId: string): Promise<boolean> => {
+    if (!user) return false;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('daily_quiz_scores')
+      .select('score')
+      .eq('user_id', user.id)
+      .eq('subject_id', subjectId)
+      .eq('quiz_date', today)
+      .maybeSingle();
+    
+    return !!data;
+  };
+
   const generateQuiz = async (subject: Subject) => {
     setSelectedSubject(subject);
     setGenerating(true);
+    
+    // Check if user already completed today's quiz for this subject
+    const hasCompleted = await checkExistingQuizAttempt(subject.id);
+    if (hasCompleted) {
+      // User already completed - show leaderboard
+      await fetchLeaderboard(subject.id);
+      setScoreSaved(true);
+      setShowLeaderboard(true);
+      setGenerating(false);
+      toast.info("You've already completed today's quiz for this subject!");
+      return;
+    }
     
     // Check localStorage for cached quiz
     const cacheKey = `quiz_${subject.id}_${new Date().toISOString().split('T')[0]}`;
@@ -398,7 +426,7 @@ const DailyQuiz = () => {
                           </div>
                           <div className="flex-1">
                             <p className="font-medium text-foreground">
-                              {isCurrentUser ? (entry.profiles?.full_name || 'You') : 'Unknown'}
+                              {entry.profiles?.full_name || (isCurrentUser ? 'You' : 'Anonymous')}
                               {isCurrentUser && <span className="text-primary ml-2">(You)</span>}
                             </p>
                           </div>
