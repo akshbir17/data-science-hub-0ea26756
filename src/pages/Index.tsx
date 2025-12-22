@@ -1,10 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { BookOpen, GraduationCap, Upload, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { BookOpen, GraduationCap, Upload, Users, ArrowRight, CheckCircle2, ChevronDown } from 'lucide-react';
 
 const Index = () => {
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    element?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background scroll-smooth">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Background gradient */}
@@ -50,6 +55,15 @@ const Index = () => {
                 </Button>
               </Link>
             </div>
+
+            {/* Scroll indicator */}
+            <button 
+              onClick={() => scrollToSection('features')}
+              className="mt-12 animate-bounce cursor-pointer mx-auto flex flex-col items-center text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span className="text-sm mb-1">Explore</span>
+              <ChevronDown className="w-6 h-6" />
+            </button>
           </div>
         </div>
 
@@ -62,7 +76,7 @@ const Index = () => {
       </div>
 
       {/* Features Section */}
-      <section className="py-20 bg-background">
+      <section id="features" className="py-20 bg-background scroll-mt-4">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-foreground mb-4">Everything You Need</h2>
@@ -106,7 +120,7 @@ const Index = () => {
       </section>
 
       {/* Subjects Preview */}
-      <section className="py-20 bg-muted/30">
+      <section id="subjects" className="py-20 bg-muted/30 scroll-mt-4">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4">3rd Semester Subjects</h2>
@@ -135,7 +149,7 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-background">
+      <section id="cta" className="py-20 bg-background scroll-mt-4">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center bg-primary rounded-3xl p-12 relative overflow-hidden">
             <div className="absolute inset-0 opacity-20">
