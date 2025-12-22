@@ -14,11 +14,9 @@ import {
   Loader2,
   FolderOpen,
   BookOpen,
-  ClipboardList,
-  Brain
+  ClipboardList
 } from 'lucide-react';
 import { format } from 'date-fns';
-import QuizList from '@/components/quiz/QuizList';
 
 interface Subject {
   id: string;
@@ -251,14 +249,6 @@ const Subject = () => {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger
-            value="quizzes"
-            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-apple-sm gap-2 px-4"
-          >
-            <Brain className="w-4 h-4" />
-            <span className="hidden sm:inline">Quizzes</span>
-            <span className="sm:hidden">Quiz</span>
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="materials" className="space-y-4 animate-fade-in">
@@ -281,9 +271,6 @@ const Subject = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="quizzes" className="animate-fade-in">
-          <QuizList subjectId={id!} />
-        </TabsContent>
       </Tabs>
     </div>
   );
