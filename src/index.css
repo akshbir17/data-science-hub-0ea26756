@@ -131,34 +131,65 @@
 }
 
 @layer utilities {
-  /* Glass morphism effects */
+  /* Glass morphism effects - Light mode */
   .glass {
-    background: hsla(265, 45%, 20%, 0.6);
+    background: hsla(0, 0%, 100%, 0.8);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsla(265, 20%, 85%, 0.5);
+    box-shadow: 0 4px 24px hsla(265, 30%, 50%, 0.08);
+  }
+  
+  .dark .glass {
+    background: hsla(265, 45%, 20%, 0.6);
     border: 1px solid hsla(265, 40%, 40%, 0.3);
+    box-shadow: none;
   }
   
   .glass-card {
     background: linear-gradient(
       135deg,
-      hsla(265, 50%, 25%, 0.5) 0%,
-      hsla(270, 45%, 20%, 0.4) 100%
+      hsla(0, 0%, 100%, 0.9) 0%,
+      hsla(265, 20%, 98%, 0.8) 100%
     );
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsla(265, 20%, 88%, 0.6);
+    box-shadow: 0 4px 20px hsla(265, 30%, 50%, 0.08);
+  }
+  
+  .dark .glass-card {
+    background: linear-gradient(
+      135deg,
+      hsla(265, 50%, 25%, 0.5) 0%,
+      hsla(270, 45%, 20%, 0.4) 100%
+    );
     border: 1px solid hsla(265, 40%, 40%, 0.25);
+    box-shadow: none;
   }
   
   .glass-surface {
-    background: hsla(265, 45%, 22%, 0.7);
+    background: hsla(0, 0%, 100%, 0.7);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsla(265, 20%, 90%, 0.5);
+  }
+  
+  .dark .glass-surface {
+    background: hsla(265, 45%, 22%, 0.7);
     border: 1px solid hsla(265, 40%, 35%, 0.2);
   }
   
-  /* Gradient backgrounds */
+  /* Gradient backgrounds - Light mode */
   .gradient-hero {
+    background: linear-gradient(
+      180deg,
+      hsl(265 20% 98%) 0%,
+      hsl(270 15% 96%) 100%
+    );
+  }
+  
+  .dark .gradient-hero {
     background: linear-gradient(
       180deg,
       hsl(265 55% 15%) 0%,
@@ -167,6 +198,14 @@
   }
   
   .gradient-card {
+    background: linear-gradient(
+      145deg,
+      hsla(270, 30%, 98%, 0.9) 0%,
+      hsla(265, 20%, 96%, 0.8) 100%
+    );
+  }
+  
+  .dark .gradient-card {
     background: linear-gradient(
       145deg,
       hsla(270, 60%, 30%, 0.4) 0%,
@@ -183,6 +222,14 @@
   }
   
   .gradient-glow {
+    background: radial-gradient(
+      circle at 50% 0%,
+      hsla(270, 80%, 60%, 0.08) 0%,
+      transparent 50%
+    );
+  }
+  
+  .dark .gradient-glow {
     background: radial-gradient(
       circle at 50% 0%,
       hsla(270, 80%, 60%, 0.15) 0%,
