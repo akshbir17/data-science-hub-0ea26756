@@ -1,16 +1,11 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { BookOpen, LogOut, Upload, User, Calculator } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { BookOpen, Upload, Calculator } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import UserProfileDropdown from '@/components/profile/UserProfileDropdown';
 
 const Header = () => {
-  const { user, userRole, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
+  const { userRole } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full glass">
@@ -45,27 +40,7 @@ const Header = () => {
               </Link>
             )}
             
-            <div className="flex items-center gap-3 pl-3 ml-2 border-l border-border/50">
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-foreground">
-                  {user?.user_metadata?.full_name || 'User'}
-                </p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {userRole || 'Loading...'}
-                </p>
-              </div>
-              <div className="flex items-center justify-center w-9 h-9 rounded-full glass-surface">
-                <User className="w-4 h-4 text-foreground" />
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleSignOut}
-                className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
+            <UserProfileDropdown />
           </nav>
         </div>
       </div>
