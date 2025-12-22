@@ -118,7 +118,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/auth`;
+    // Use the Vercel deployment URL for password reset redirects
+    const redirectUrl = 'https://data-science-hub-snowy.vercel.app/reset-password';
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
