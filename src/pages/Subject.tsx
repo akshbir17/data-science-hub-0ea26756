@@ -14,9 +14,11 @@ import {
   Loader2,
   FolderOpen,
   BookOpen,
-  ClipboardList
+  ClipboardList,
+  Brain
 } from 'lucide-react';
 import { format } from 'date-fns';
+import QuizList from '@/components/quiz/QuizList';
 
 interface Subject {
   id: string;
@@ -225,10 +227,11 @@ const Subject = () => {
         <TabsList className="h-12 p-1 bg-secondary rounded-2xl w-full sm:w-auto">
           <TabsTrigger
             value="materials"
-            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-apple-sm gap-2 px-6"
+            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-apple-sm gap-2 px-4"
           >
             <BookOpen className="w-4 h-4" />
-            Study Materials
+            <span className="hidden sm:inline">Study Materials</span>
+            <span className="sm:hidden">Materials</span>
             {materials.length > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs rounded-md">
                 {materials.length}
@@ -237,15 +240,24 @@ const Subject = () => {
           </TabsTrigger>
           <TabsTrigger
             value="pyq"
-            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-apple-sm gap-2 px-6"
+            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-apple-sm gap-2 px-4"
           >
             <ClipboardList className="w-4 h-4" />
-            Past Year Questions
+            <span className="hidden sm:inline">Past Year Questions</span>
+            <span className="sm:hidden">PYQs</span>
             {pyqs.length > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs rounded-md">
                 {pyqs.length}
               </Badge>
             )}
+          </TabsTrigger>
+          <TabsTrigger
+            value="quizzes"
+            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-apple-sm gap-2 px-4"
+          >
+            <Brain className="w-4 h-4" />
+            <span className="hidden sm:inline">Quizzes</span>
+            <span className="sm:hidden">Quiz</span>
           </TabsTrigger>
         </TabsList>
 
@@ -267,6 +279,10 @@ const Subject = () => {
           ) : (
             <EmptyState type="pyq" />
           )}
+        </TabsContent>
+
+        <TabsContent value="quizzes" className="animate-fade-in">
+          <QuizList subjectId={id!} />
         </TabsContent>
       </Tabs>
     </div>

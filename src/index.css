@@ -6,55 +6,55 @@
 
 @layer base {
   :root {
-    --background: 265 50% 12%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 100%;
+    --foreground: 265 50% 12%;
     
-    --card: 265 45% 18%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 265 50% 12%;
     
-    --popover: 265 45% 15%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 265 50% 12%;
     
-    --primary: 270 70% 60%;
+    --primary: 270 70% 55%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 265 40% 25%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 265 20% 95%;
+    --secondary-foreground: 265 50% 20%;
     
-    --muted: 265 30% 22%;
-    --muted-foreground: 265 20% 65%;
+    --muted: 265 15% 92%;
+    --muted-foreground: 265 20% 45%;
     
-    --accent: 270 80% 65%;
+    --accent: 270 80% 60%;
     --accent-foreground: 0 0% 100%;
     
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 265 30% 28%;
-    --input: 265 35% 22%;
-    --ring: 270 70% 60%;
+    --border: 265 20% 88%;
+    --input: 265 20% 92%;
+    --ring: 270 70% 55%;
     
     --radius: 1rem;
     
-    /* Custom purple palette */
+    /* Custom purple palette - light mode */
     --purple-glow: 270 80% 70%;
-    --purple-deep: 265 55% 8%;
-    --purple-surface: 265 45% 16%;
-    --purple-accent: 280 85% 65%;
+    --purple-deep: 265 30% 96%;
+    --purple-surface: 265 25% 97%;
+    --purple-accent: 280 85% 60%;
     
-    /* Glass effect colors */
-    --glass-bg: 265 50% 20%;
-    --glass-border: 265 40% 35%;
+    /* Glass effect colors - light mode */
+    --glass-bg: 0 0% 100%;
+    --glass-border: 265 20% 90%;
     
-    /* Sidebar colors */
-    --sidebar-background: 265 50% 10%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 270 70% 60%;
+    /* Sidebar colors - light mode */
+    --sidebar-background: 265 25% 98%;
+    --sidebar-foreground: 265 50% 15%;
+    --sidebar-primary: 270 70% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 265 40% 25%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 265 30% 25%;
-    --sidebar-ring: 270 70% 60%;
+    --sidebar-accent: 265 20% 94%;
+    --sidebar-accent-foreground: 265 50% 20%;
+    --sidebar-border: 265 20% 90%;
+    --sidebar-ring: 270 70% 55%;
   }
 
   .dark {
@@ -85,6 +85,26 @@
     --border: 265 30% 28%;
     --input: 265 35% 22%;
     --ring: 270 70% 60%;
+    
+    /* Custom purple palette - dark mode */
+    --purple-glow: 270 80% 70%;
+    --purple-deep: 265 55% 8%;
+    --purple-surface: 265 45% 16%;
+    --purple-accent: 280 85% 65%;
+    
+    /* Glass effect colors - dark mode */
+    --glass-bg: 265 50% 20%;
+    --glass-border: 265 40% 35%;
+    
+    /* Sidebar colors - dark mode */
+    --sidebar-background: 265 50% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 270 70% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 265 40% 25%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 265 30% 25%;
+    --sidebar-ring: 270 70% 60%;
   }
 }
 
@@ -96,12 +116,17 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .dark body,
+  body:has(.dark) {
     background: linear-gradient(180deg, 
       hsl(265 50% 12%) 0%, 
       hsl(270 55% 8%) 50%,
       hsl(265 50% 10%) 100%
     );
-    min-height: 100vh;
   }
 }
 
