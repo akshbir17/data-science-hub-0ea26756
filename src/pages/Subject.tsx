@@ -81,13 +81,24 @@ const Subject = () => {
   };
 
   const handleDownload = async (resource: Resource) => {
-    const url = getFileUrl(resource.file_path);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = resource.file_name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const url = getFileUrl(resource.file_path);
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = resource.file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: open in new tab
+      const url = getFileUrl(resource.file_path);
+      window.open(url, '_blank');
+    }
   };
 
   const handleView = (resource: Resource) => {
@@ -102,8 +113,13 @@ const Subject = () => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const materials = resources.filter(r => r.resource_type === 'material');
-  const pyqs = resources.filter(r => r.resource_type === 'pyq');
+  // Sort resources by title naturally (Module 1 before Module 10)
+  const sortByTitle = (a: Resource, b: Resource) => {
+    return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' });
+  };
+
+  const materials = resources.filter(r => r.resource_type === 'material').sort(sortByTitle);
+  const pyqs = resources.filter(r => r.resource_type === 'pyq').sort(sortByTitle);
 
   const ResourceCard = ({ resource, index }: { resource: Resource; index: number }) => (
     <Card 
