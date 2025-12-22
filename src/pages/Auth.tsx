@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, ShieldCheck, BookOpen, Loader2, Mail } from 'lucide-react';
+import { GraduationCap, ShieldCheck, BookOpen, Loader2, Mail, Users } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Invalid email address');
@@ -47,6 +48,7 @@ const Auth = () => {
   
   
   // Student form
+  const [isTeacher, setIsTeacher] = useState(false);
   const [studentUSN, setStudentUSN] = useState('');
   const [studentPassword, setStudentPassword] = useState('');
   const [studentName, setStudentName] = useState('');
@@ -133,12 +135,14 @@ const Auth = () => {
           navigate('/dashboard');
         }
       } else {
-        // Signup - requires USN, Email, Name, Password
-        const usnResult = usnSchema.safeParse(studentUSN);
-        if (!usnResult.success) {
-          toast({ title: 'Validation Error', description: usnResult.error.errors[0].message, variant: 'destructive' });
-          setLoading(false);
-          return;
+        // Signup - USN required only for students (not teachers)
+        if (!isTeacher) {
+          const usnResult = usnSchema.safeParse(studentUSN);
+          if (!usnResult.success) {
+            toast({ title: 'Validation Error', description: usnResult.error.errors[0].message, variant: 'destructive' });
+            setLoading(false);
+            return;
+          }
         }
 
         const emailResult = emailSchema.safeParse(studentEmail);
@@ -164,7 +168,7 @@ const Auth = () => {
 
         const { error } = await signUp(studentEmail, studentPassword, {
           full_name: studentName.trim(),
-          usn: studentUSN.toUpperCase(),
+          usn: isTeacher ? null : studentUSN.toUpperCase(),
           role: 'student',
           email: studentEmail.trim(),
         });
@@ -266,6 +270,18 @@ const Auth = () => {
                 <form onSubmit={handleStudentAuth} className="space-y-4">
                   {!isLogin && (
                     <>
+                      {/* Teacher/Student Toggle */}
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border/30">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">I am a Teacher</span>
+                        </div>
+                        <Switch
+                          checked={isTeacher}
+                          onCheckedChange={setIsTeacher}
+                        />
+                      </div>
+                      
                       <div className="space-y-2">
                         <Label htmlFor="studentName" className="text-foreground">Full Name</Label>
                         <Input
@@ -292,17 +308,19 @@ const Auth = () => {
                         />
                         <p className="text-xs text-muted-foreground">Required for password recovery</p>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
-                        <Input
-                          id="usn"
-                          placeholder="e.g., 3GN24CD000"
-                          value={studentUSN}
-                          onChange={(e) => setStudentUSN(e.target.value.toUpperCase())}
-                          required
-                          className="bg-input border-border/50 rounded-xl uppercase focus:border-primary"
-                        />
-                      </div>
+                      {!isTeacher && (
+                        <div className="space-y-2">
+                          <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
+                          <Input
+                            id="usn"
+                            placeholder="e.g., 3GN24CD000"
+                            value={studentUSN}
+                            onChange={(e) => setStudentUSN(e.target.value.toUpperCase())}
+                            required={!isTeacher}
+                            className="bg-input border-border/50 rounded-xl uppercase focus:border-primary"
+                          />
+                        </div>
+                      )}
                     </>
                   )}
                   {isLogin && (
