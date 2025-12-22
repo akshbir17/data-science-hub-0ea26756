@@ -20,15 +20,29 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-const getDailySeed = () => {
+// Get current date in IST (UTC+5:30)
+const getISTDate = () => {
   const now = new Date();
-  return now.getUTCFullYear() * 10000 + (now.getUTCMonth() + 1) * 100 + now.getUTCDate();
+  // IST is UTC+5:30, so add 5.5 hours in milliseconds
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(now.getTime() + istOffset);
+  return {
+    year: istTime.getUTCFullYear(),
+    month: istTime.getUTCMonth() + 1,
+    day: istTime.getUTCDate(),
+  };
+};
+
+const getDailySeed = () => {
+  const { year, month, day } = getISTDate();
+  return year * 10000 + month * 100 + day;
 };
 
 const getPuzzleNumber = () => {
-  const startDate = new Date('2024-01-01');
-  const now = new Date();
-  const diffTime = now.getTime() - startDate.getTime();
+  const startDate = new Date('2024-01-01T00:00:00+05:30');
+  const { year, month, day } = getISTDate();
+  const currentIST = new Date(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00+05:30`);
+  const diffTime = currentIST.getTime() - startDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   return diffDays + 1;
 };
