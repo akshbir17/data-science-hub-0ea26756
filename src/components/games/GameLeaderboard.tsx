@@ -156,12 +156,9 @@ const GameLeaderboard = ({ gameType }: GameLeaderboardProps) => {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">
-                      {entry.full_name}
+                      {entry.usn || 'Anonymous'}
                       {isCurrentUser && <span className="text-primary ml-2">(You)</span>}
                     </p>
-                    {entry.usn && (
-                      <p className="text-xs text-muted-foreground">{entry.usn}</p>
-                    )}
                   </div>
                   <div className="font-mono font-bold text-lg">
                     {formatTime(entry.time_seconds)}
