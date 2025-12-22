@@ -5,6 +5,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { 
   ArrowLeft, 
   Download, 
@@ -14,9 +23,12 @@ import {
   Loader2,
   FolderOpen,
   BookOpen,
-  ClipboardList
+  ClipboardList,
+  Pencil
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface Subject {
   id: string;
@@ -39,15 +51,39 @@ interface Resource {
 
 const Subject = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [subject, setSubject] = useState<Subject | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingResource, setEditingResource] = useState<Resource | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchSubjectAndResources();
     }
   }, [id]);
+
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+    checkAdminRole();
+  }, [user]);
 
   const fetchSubjectAndResources = async () => {
     try {
@@ -104,6 +140,45 @@ const Subject = () => {
   const handleView = (resource: Resource) => {
     const url = getFileUrl(resource.file_path);
     window.open(url, '_blank');
+  };
+
+  const handleEdit = (resource: Resource) => {
+    setEditingResource(resource);
+    setEditTitle(resource.title);
+    setEditDescription(resource.description || '');
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingResource || !editTitle.trim()) return;
+    
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('resources')
+        .update({ 
+          title: editTitle.trim(),
+          description: editDescription.trim() || null
+        })
+        .eq('id', editingResource.id);
+
+      if (error) throw error;
+
+      setResources(prev => 
+        prev.map(r => 
+          r.id === editingResource.id 
+            ? { ...r, title: editTitle.trim(), description: editDescription.trim() || null }
+            : r
+        )
+      );
+      toast.success('Resource updated successfully');
+      setEditDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating resource:', error);
+      toast.error('Failed to update resource');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const formatFileSize = (bytes: number | null) => {
@@ -163,6 +238,17 @@ const Subject = () => {
           </div>
 
           <div className="flex gap-2 shrink-0">
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEdit(resource)}
+                className="gap-2 rounded-xl"
+              >
+                <Pencil className="w-4 h-4" />
+                Edit
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -296,6 +382,44 @@ const Subject = () => {
         </TabsContent>
 
       </Tabs>
+
+      {/* Edit Resource Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Resource</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="e.g., Module 1"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description (optional)</Label>
+              <Input
+                id="edit-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Brief description..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={saving || !editTitle.trim()}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
