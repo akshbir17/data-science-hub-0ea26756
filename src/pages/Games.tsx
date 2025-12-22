@@ -1,0 +1,68 @@
+import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Gamepad2, Grid3X3, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+const Games = () => {
+  const games = [
+    {
+      id: 'zip',
+      name: 'Zip',
+      description: 'Connect the dots in order and fill every cell',
+      icon: Gamepad2,
+      color: 'from-orange-500 to-red-500',
+    },
+    {
+      id: 'sudoku',
+      name: 'Mini Sudoku',
+      description: 'Fill the 4x4 grid with numbers 1-4',
+      icon: Grid3X3,
+      color: 'from-blue-500 to-purple-500',
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 w-full glass">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center gap-4">
+            <Link to="/dashboard">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-lg font-semibold">Daily Games</h1>
+              <p className="text-xs text-muted-foreground">New puzzles every day at UTC midnight</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid gap-6 sm:grid-cols-2 max-w-2xl mx-auto">
+          {games.map((game) => (
+            <Link key={game.id} to={`/games/${game.id}`}>
+              <Card className="glass-card border-border/30 hover:border-primary/50 transition-all cursor-pointer group h-full">
+                <CardHeader>
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${game.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <game.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <CardTitle className="group-hover:text-primary transition-colors">
+                    {game.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm">{game.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Games;

@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Upload, Calculator } from 'lucide-react';
+import { BookOpen, Upload, Calculator, Gamepad2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import UserProfileDropdown from '@/components/profile/UserProfileDropdown';
 
@@ -24,6 +24,13 @@ const Header = () => {
 
           {/* Navigation */}
           <nav className="flex items-center gap-2">
+            <Link to="/games">
+              <Button variant="ghost" size="sm" className="gap-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50">
+                <Gamepad2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Games</span>
+              </Button>
+            </Link>
+            
             <Link to="/calculator">
               <Button variant="ghost" size="sm" className="gap-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50">
                 <Calculator className="w-4 h-4" />

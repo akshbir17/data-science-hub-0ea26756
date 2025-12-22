@@ -14,6 +14,9 @@ import Subject from "./pages/Subject";
 import AdminUpload from "./pages/AdminUpload";
 import Calculator from "./pages/Calculator";
 import Quiz from "./pages/Quiz";
+import Games from "./pages/Games";
+import ZipGame from "./pages/ZipGame";
+import SudokuGame from "./pages/SudokuGame";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +33,9 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/calculator" element={<Calculator />} />
+              <Route path="/games" element={<Games />} />
+              <Route path="/games/zip" element={<ZipGame />} />
+              <Route path="/games/sudoku" element={<SudokuGame />} />
               <Route element={<DashboardLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/subject/:id" element={<Subject />} />
