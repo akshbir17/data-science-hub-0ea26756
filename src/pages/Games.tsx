@@ -41,7 +41,7 @@ const Games = () => {
             </Link>
             <div>
               <h1 className="text-lg font-semibold">Daily Games</h1>
-              <p className="text-xs text-muted-foreground">New puzzles every day at UTC midnight</p>
+              <p className="text-xs text-muted-foreground">New puzzles every day at 12:00 AM IST</p>
             </div>
           </div>
         </div>
