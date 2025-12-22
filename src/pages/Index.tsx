@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { BookOpen, GraduationCap, Upload, Users, ArrowRight, CheckCircle2, ChevronDown } from 'lucide-react';
+import { BookOpen, GraduationCap, Upload, Users, ArrowRight, CheckCircle2, ChevronDown, Smartphone } from 'lucide-react';
 
 const Index = () => {
   const scrollToSection = (id: string) => {
@@ -144,6 +144,35 @@ const Index = () => {
                 {subject}
               </div>
             ))}
+          </div>
+
+          {/* Add to Home Screen Guide */}
+          <div className="mt-12 max-w-2xl mx-auto">
+            <div className="p-6 rounded-2xl bg-card border border-border/50 text-left">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
+                  <Smartphone className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">Add to Home Screen</h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Install this app on your device for quick access:
+              </p>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="font-semibold text-primary">iOS:</span>
+                  <span className="text-muted-foreground">Tap the Share button → "Add to Home Screen"</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="font-semibold text-primary">Android:</span>
+                  <span className="text-muted-foreground">Tap Menu (⋮) → "Add to Home Screen" or "Install App"</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="font-semibold text-primary">Desktop:</span>
+                  <span className="text-muted-foreground">Click the install icon in the address bar</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
