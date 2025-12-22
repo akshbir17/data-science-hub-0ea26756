@@ -225,7 +225,7 @@ const Auth = () => {
                     <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
                     <Input
                       id="usn"
-                      placeholder="e.g., 1DS22DS001"
+                      placeholder="e.g., 3GN24CD000"
                       value={studentUSN}
                       onChange={(e) => setStudentUSN(e.target.value.toUpperCase())}
                       required
