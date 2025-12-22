@@ -124,6 +124,32 @@ const ZipGame = () => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+  const [previousTime, setPreviousTime] = useState<number | null>(null);
+
+  // Check if user already completed today's puzzle
+  useEffect(() => {
+    const checkExistingScore = async () => {
+      if (!user) return;
+      
+      const todayDate = new Date().toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('game_scores')
+        .select('time_seconds')
+        .eq('user_id', user.id)
+        .eq('game_type', 'zip')
+        .eq('puzzle_date', todayDate)
+        .maybeSingle();
+      
+      if (data) {
+        setAlreadyCompleted(true);
+        setPreviousTime(data.time_seconds);
+        setShowLeaderboard(true);
+      }
+    };
+    
+    checkExistingScore();
+  }, [user]);
 
   // Timer
   useEffect(() => {
