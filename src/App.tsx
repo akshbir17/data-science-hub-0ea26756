@@ -14,7 +14,6 @@ import Dashboard from "./pages/Dashboard";
 import Subject from "./pages/Subject";
 import AdminUpload from "./pages/AdminUpload";
 import Calculator from "./pages/Calculator";
-import Quiz from "./pages/Quiz";
 import Games from "./pages/Games";
 import ZipGame from "./pages/ZipGame";
 import SudokuGame from "./pages/SudokuGame";
@@ -43,7 +42,6 @@ const App = () => (
                 <Route element={<DashboardLayout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/subject/:id" element={<Subject />} />
-                  <Route path="/subject/:id/quiz/:quizId" element={<Quiz />} />
                   <Route path="/admin/upload" element={<AdminUpload />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
