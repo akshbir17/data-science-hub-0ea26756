@@ -10,6 +10,7 @@ interface AuthContextType {
   userRole: UserRole;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithUSN: (usn: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, metadata?: { full_name?: string; usn?: string; role?: string; email?: string }) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
@@ -77,6 +78,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error: error as Error | null };
   };
 
+  const signInWithUSN = async (usn: string, password: string) => {
+    // Look up the user's email from their USN in the profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('usn', usn.toUpperCase())
+      .single();
+
+    if (profileError || !profile?.email) {
+      return { error: new Error('No account found with this USN. Please check your USN or register first.') };
+    }
+
+    // Sign in with the email
+    const { error } = await supabase.auth.signInWithPassword({
+      email: profile.email,
+      password,
+    });
+    return { error: error as Error | null };
+  };
+
   const signUp = async (
     email: string, 
     password: string, 
@@ -112,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, userRole, loading, signIn, signUp, signOut, resetPassword }}>
+    <AuthContext.Provider value={{ user, session, userRole, loading, signIn, signInWithUSN, signUp, signOut, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
