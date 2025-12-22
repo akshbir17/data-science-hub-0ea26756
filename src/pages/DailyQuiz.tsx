@@ -18,7 +18,6 @@ import {
   Loader2,
   Sparkles,
   BookOpen,
-  Medal,
   Users
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -376,13 +375,13 @@ const DailyQuiz = () => {
                             isCurrentUser ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/30'
                           }`}
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
                             idx === 0 ? 'bg-yellow-500 text-yellow-950' :
                             idx === 1 ? 'bg-gray-400 text-gray-950' :
                             idx === 2 ? 'bg-amber-600 text-amber-950' :
                             'bg-muted text-muted-foreground'
                           }`}>
-                            {idx < 3 ? <Medal className="w-4 h-4" /> : idx + 1}
+                            #{idx + 1}
                           </div>
                           <div className="flex-1">
                             <p className="font-medium text-foreground">
