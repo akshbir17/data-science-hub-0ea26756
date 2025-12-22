@@ -44,7 +44,7 @@ const Auth = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
-  const [loginMethod, setLoginMethod] = useState<'usn' | 'email'>('usn');
+  
   
   // Student form
   const [studentUSN, setStudentUSN] = useState('');
@@ -110,52 +110,27 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        // Login with either USN or Email
-        if (loginMethod === 'usn') {
-          const usnResult = usnSchema.safeParse(studentUSN);
-          if (!usnResult.success) {
-            toast({ title: 'Validation Error', description: usnResult.error.errors[0].message, variant: 'destructive' });
-            setLoading(false);
-            return;
-          }
+        // Login with email
+        const emailResult = emailSchema.safeParse(studentLoginEmail);
+        if (!emailResult.success) {
+          toast({ title: 'Validation Error', description: emailResult.error.errors[0].message, variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
 
-          const passwordResult = passwordSchema.safeParse(studentPassword);
-          if (!passwordResult.success) {
-            toast({ title: 'Validation Error', description: passwordResult.error.errors[0].message, variant: 'destructive' });
-            setLoading(false);
-            return;
-          }
+        const passwordResult = passwordSchema.safeParse(studentPassword);
+        if (!passwordResult.success) {
+          toast({ title: 'Validation Error', description: passwordResult.error.errors[0].message, variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
 
-          const { error } = await signInWithUSN(studentUSN.toUpperCase(), studentPassword);
-          if (error) {
-            toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
-          } else {
-            toast({ title: 'Welcome back!', description: 'Successfully logged in.' });
-            navigate('/dashboard');
-          }
+        const { error } = await signIn(studentLoginEmail, studentPassword);
+        if (error) {
+          toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
         } else {
-          // Login with email
-          const emailResult = emailSchema.safeParse(studentLoginEmail);
-          if (!emailResult.success) {
-            toast({ title: 'Validation Error', description: emailResult.error.errors[0].message, variant: 'destructive' });
-            setLoading(false);
-            return;
-          }
-
-          const passwordResult = passwordSchema.safeParse(studentPassword);
-          if (!passwordResult.success) {
-            toast({ title: 'Validation Error', description: passwordResult.error.errors[0].message, variant: 'destructive' });
-            setLoading(false);
-            return;
-          }
-
-          const { error } = await signIn(studentLoginEmail, studentPassword);
-          if (error) {
-            toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
-          } else {
-            toast({ title: 'Welcome back!', description: 'Successfully logged in.' });
-            navigate('/dashboard');
-          }
+          toast({ title: 'Welcome back!', description: 'Successfully logged in.' });
+          navigate('/dashboard');
         }
       } else {
         // Signup - requires USN, Email, Name, Password
@@ -331,60 +306,18 @@ const Auth = () => {
                     </>
                   )}
                   {isLogin && (
-                    <>
-                      {/* Login method toggle */}
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <button
-                          type="button"
-                          onClick={() => setLoginMethod('usn')}
-                          className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
-                            loginMethod === 'usn' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'
-                          }`}
-                        >
-                          Login with USN
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setLoginMethod('email')}
-                          className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
-                            loginMethod === 'email' 
-                              ? 'bg-primary text-primary-foreground' 
-                              : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'
-                          }`}
-                        >
-                          Login with Email
-                        </button>
-                      </div>
-                      
-                      {loginMethod === 'usn' ? (
-                        <div className="space-y-2">
-                          <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
-                          <Input
-                            id="usn"
-                            placeholder="e.g., 3GN24CD000"
-                            value={studentUSN}
-                            onChange={(e) => setStudentUSN(e.target.value.toUpperCase())}
-                            required
-                            className="bg-input border-border/50 rounded-xl uppercase focus:border-primary"
-                          />
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <Label htmlFor="studentLoginEmail" className="text-foreground">Email Address</Label>
-                          <Input
-                            id="studentLoginEmail"
-                            type="email"
-                            placeholder="your.email@example.com"
-                            value={studentLoginEmail}
-                            onChange={(e) => setStudentLoginEmail(e.target.value)}
-                            required
-                            className="bg-input border-border/50 rounded-xl focus:border-primary"
-                          />
-                        </div>
-                      )}
-                    </>
+                    <div className="space-y-2">
+                      <Label htmlFor="studentLoginEmail" className="text-foreground">Email Address</Label>
+                      <Input
+                        id="studentLoginEmail"
+                        type="email"
+                        placeholder="your.email@example.com"
+                        value={studentLoginEmail}
+                        onChange={(e) => setStudentLoginEmail(e.target.value)}
+                        required
+                        className="bg-input border-border/50 rounded-xl focus:border-primary"
+                      />
+                    </div>
                   )}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
