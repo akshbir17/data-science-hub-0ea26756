@@ -19,6 +19,7 @@ import ZipGame from "./pages/ZipGame";
 import SudokuGame from "./pages/SudokuGame";
 import QueensGame from "./pages/QueensGame";
 import DailyQuiz from "./pages/DailyQuiz";
+import Timetable from "./pages/Timetable";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -46,6 +47,7 @@ const App = () => (
                 <Route element={<DashboardLayout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/subject/:id" element={<Subject />} />
+                  <Route path="/timetable" element={<Timetable />} />
                   <Route path="/admin/upload" element={<AdminUpload />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />

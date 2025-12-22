@@ -16,7 +16,8 @@ import {
   FolderOpen,
   Clock,
   GraduationCap,
-  Sparkles
+  Sparkles,
+  Calendar
 } from 'lucide-react';
 
 interface Subject {
@@ -193,6 +194,12 @@ const Dashboard = () => {
               <Badge variant="outline" className="bg-secondary/50 border-border/50 px-4 py-2 rounded-full text-sm font-medium hover:bg-secondary transition-colors cursor-pointer">
                 <GraduationCap className="w-3.5 h-3.5 mr-1.5" />
                 {t('cgpaCalculator')}
+              </Badge>
+            </Link>
+            <Link to="/timetable">
+              <Badge variant="outline" className="bg-secondary/50 border-border/50 px-4 py-2 rounded-full text-sm font-medium hover:bg-secondary transition-colors cursor-pointer">
+                <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                Timetable
               </Badge>
             </Link>
           </div>
