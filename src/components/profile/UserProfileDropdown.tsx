@@ -25,7 +25,7 @@ import ShareDialog from './ShareDialog';
 const UserProfileDropdown = () => {
   const { user, userRole, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { isAllowed, toggleNotifications } = useNotifications();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,10 +40,10 @@ const UserProfileDropdown = () => {
   const handleNotificationToggle = async () => {
     await toggleNotifications();
     toast({
-      title: isAllowed ? 'Notifications' : 'Notifications Enabled',
+      title: isAllowed ? t('notifications') : t('notificationsEnabled'),
       description: isAllowed 
-        ? 'To disable notifications, please use your browser settings'
-        : 'You will now receive notifications',
+        ? t('toDisableNotifications')
+        : t('youWillReceiveNotifications'),
     });
   };
 
@@ -66,7 +66,7 @@ const UserProfileDropdown = () => {
                 {userName}
               </p>
               <p className="text-xs text-muted-foreground capitalize">
-                {userRole || 'Loading...'}
+                {userRole === 'admin' ? t('admin') : t('student')}
               </p>
             </div>
             <Avatar className="h-9 w-9 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
@@ -102,7 +102,7 @@ const UserProfileDropdown = () => {
             >
               <div className="flex items-center gap-3">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span>My Profile</span>
+                <span>{t('myProfile')}</span>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </DropdownMenuItem>
@@ -112,7 +112,7 @@ const UserProfileDropdown = () => {
               <DropdownMenuSubTrigger className="flex items-center justify-between py-2.5 px-3 cursor-pointer">
                 <div className="flex items-center gap-3">
                   <Settings className="h-4 w-4 text-muted-foreground" />
-                  <span>Settings</span>
+                  <span>{t('settings')}</span>
                 </div>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
@@ -120,7 +120,7 @@ const UserProfileDropdown = () => {
                   <div className="p-2 space-y-3">
                     {/* Theme Toggle */}
                     <div className="flex items-center justify-between py-2 px-2">
-                      <span className="text-sm">Theme</span>
+                      <span className="text-sm">{t('theme')}</span>
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setTheme('light')}
@@ -149,7 +149,7 @@ const UserProfileDropdown = () => {
                     <div className="border-t border-border pt-2">
                       <div className="flex items-center gap-2 px-2 pb-2">
                         <Globe className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">Language</span>
+                        <span className="text-sm">{t('language')}</span>
                       </div>
                       <div className="space-y-1">
                         {languages.map((lang) => (
@@ -180,7 +180,7 @@ const UserProfileDropdown = () => {
             >
               <div className="flex items-center gap-3">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                <span>Notification</span>
+                <span>{t('notification')}</span>
               </div>
               <Switch 
                 checked={isAllowed} 
@@ -196,7 +196,7 @@ const UserProfileDropdown = () => {
             >
               <div className="flex items-center gap-3">
                 <Share2 className="h-4 w-4 text-muted-foreground" />
-                <span>Share App</span>
+                <span>{t('shareApp')}</span>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </DropdownMenuItem>
@@ -211,7 +211,7 @@ const UserProfileDropdown = () => {
               className="flex items-center gap-3 py-2.5 px-3 cursor-pointer text-destructive focus:text-destructive"
             >
               <LogOut className="h-4 w-4" />
-              <span>Log Out</span>
+              <span>{t('logOut')}</span>
             </DropdownMenuItem>
           </div>
         </DropdownMenuContent>

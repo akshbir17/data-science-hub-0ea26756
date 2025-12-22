@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -75,6 +76,7 @@ const CircularProgress = ({ progress, size = 48 }: { progress: number; size?: nu
 
 const Dashboard = () => {
   const { user, userRole } = useAuth();
+  const { t } = useLanguage();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [resourceCounts, setResourceCounts] = useState<Record<string, number>>({});
@@ -145,7 +147,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/30">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <FolderOpen className="w-4 h-4" />
-              <span>{count} resources</span>
+              <span>{count} {t('resources').toLowerCase()}</span>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </div>
@@ -165,19 +167,19 @@ const Dashboard = () => {
         <div className="absolute -bottom-20 -left-20 w-48 h-48 rounded-full bg-accent/20 blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
         
         <div className="relative z-10">
-          <p className="text-sm text-muted-foreground mb-2">Hello,</p>
+          <p className="text-sm text-muted-foreground mb-2">{t('hello')},</p>
           <h1 className="text-4xl font-bold text-gradient mb-2">{firstName}</h1>
           
           {/* Tab-like navigation */}
           <div className="flex gap-2 mt-6 flex-wrap">
             <Badge className="bg-primary/20 text-primary border-primary/30 px-4 py-2 rounded-full text-sm font-medium">
               <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-              {userRole === 'admin' ? 'Admin' : 'Student'}
+              {userRole === 'admin' ? t('admin') : t('student')}
             </Badge>
             <Link to="/calculator">
               <Badge variant="outline" className="bg-secondary/50 border-border/50 px-4 py-2 rounded-full text-sm font-medium hover:bg-secondary transition-colors cursor-pointer">
                 <GraduationCap className="w-3.5 h-3.5 mr-1.5" />
-                CGPA Calculator
+                {t('cgpaCalculator')}
               </Badge>
             </Link>
           </div>
@@ -188,7 +190,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-2 gap-4">
         <div className="glass-card rounded-2xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Subjects</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('totalSubjects')}</p>
             <div className="w-10 h-10 rounded-xl gradient-purple flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-primary-foreground" />
             </div>
@@ -198,7 +200,7 @@ const Dashboard = () => {
         
         <div className="glass-card rounded-2xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Resources</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('resources')}</p>
             <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
               <FolderOpen className="w-5 h-5 text-accent" />
             </div>
@@ -216,8 +218,8 @@ const Dashboard = () => {
             <BookOpen className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-foreground">3rd Semester</h2>
-            <p className="text-sm text-muted-foreground">Core subjects</p>
+            <h2 className="text-xl font-semibold text-foreground">{t('thirdSemester')}</h2>
+            <p className="text-sm text-muted-foreground">{t('coreSubjects')}</p>
           </div>
         </div>
         
@@ -241,7 +243,7 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="glass-card p-8 text-center rounded-3xl">
-            <p className="text-muted-foreground">No subjects found for 3rd semester.</p>
+            <p className="text-muted-foreground">{t('noSubjectsFound')}</p>
           </div>
         )}
       </section>
@@ -253,8 +255,8 @@ const Dashboard = () => {
             <Clock className="w-5 h-5 text-accent" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-foreground">4th Semester</h2>
-            <p className="text-sm text-muted-foreground">Coming soon</p>
+            <h2 className="text-xl font-semibold text-foreground">{t('fourthSemester')}</h2>
+            <p className="text-sm text-muted-foreground">{t('comingSoon')}</p>
           </div>
         </div>
         
@@ -273,9 +275,9 @@ const Dashboard = () => {
         ) : (
           <div className="glass-card p-10 text-center rounded-3xl border-2 border-dashed border-border/50">
             <Clock className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="font-semibold text-foreground mb-1">4th Semester Resources</h3>
+            <h3 className="font-semibold text-foreground mb-1">{t('fourthSemResources')}</h3>
             <p className="text-muted-foreground text-sm">
-              Subjects and materials will be added soon. Stay tuned!
+              {t('stayTuned')}
             </p>
           </div>
         )}
