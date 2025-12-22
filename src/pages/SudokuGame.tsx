@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStreak } from '@/hooks/useStreak';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, RotateCcw, Trophy, Clock, XCircle } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Trophy, Clock, XCircle, Flame } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import GameLeaderboard from '@/components/games/GameLeaderboard';
 
@@ -126,6 +127,7 @@ const generatePuzzle = (seed: number) => {
 const SudokuGame = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { streak, updateStreak } = useStreak('sudoku');
   const seed = getDailySeed();
   const puzzleNum = getPuzzleNumber();
   
@@ -163,10 +165,11 @@ const SudokuGame = () => {
     }
   }, [grid, solution]);
 
-  // Submit score when complete
+  // Submit score and update streak when complete
   useEffect(() => {
     if (isComplete && !hasSubmitted && user && elapsedTime > 0) {
       submitScore();
+      updateStreak();
     }
   }, [isComplete, hasSubmitted, user, elapsedTime]);
 

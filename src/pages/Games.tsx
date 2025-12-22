@@ -2,6 +2,38 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Gamepad2, Grid3X3, ArrowLeft, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useStreak } from '@/hooks/useStreak';
+import StreakBadge from '@/components/StreakBadge';
+
+const GameCard = ({ game }: { game: { id: string; name: string; description: string; icon: any; color: string } }) => {
+  const activityType = game.id as 'sudoku' | 'zip' | 'queens';
+  const { streak } = useStreak(activityType);
+
+  return (
+    <Link to={`/games/${game.id}`}>
+      <Card className="glass-card border-border/30 hover:border-primary/50 transition-all cursor-pointer group h-full">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${game.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+              <game.icon className="w-8 h-8 text-white" />
+            </div>
+            <StreakBadge 
+              currentStreak={streak.current_streak} 
+              longestStreak={streak.longest_streak}
+              size="sm"
+            />
+          </div>
+          <CardTitle className="group-hover:text-primary transition-colors">
+            {game.name}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground text-sm">{game.description}</p>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+};
 
 const Games = () => {
   const games = [
@@ -50,21 +82,7 @@ const Games = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="grid gap-6 sm:grid-cols-2 max-w-2xl mx-auto">
           {games.map((game) => (
-            <Link key={game.id} to={`/games/${game.id}`}>
-              <Card className="glass-card border-border/30 hover:border-primary/50 transition-all cursor-pointer group h-full">
-                <CardHeader>
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${game.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                    <game.icon className="w-8 h-8 text-white" />
-                  </div>
-                  <CardTitle className="group-hover:text-primary transition-colors">
-                    {game.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-sm">{game.description}</p>
-                </CardContent>
-              </Card>
-            </Link>
+            <GameCard key={game.id} game={game} />
           ))}
         </div>
       </main>

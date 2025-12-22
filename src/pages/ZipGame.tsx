@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStreak } from '@/hooks/useStreak';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Undo2, RotateCcw, Trophy, Clock } from 'lucide-react';
+import { ArrowLeft, Undo2, RotateCcw, Trophy, Clock, Flame } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import GameLeaderboard from '@/components/games/GameLeaderboard';
 
@@ -127,6 +128,7 @@ type Cell = {
 const ZipGame = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { streak, updateStreak } = useStreak('zip');
   const seed = getDailySeed();
   const puzzleNum = getPuzzleNumber();
   
@@ -199,10 +201,11 @@ const ZipGame = () => {
     }
   }, [userPath, puzzle]);
 
-  // Submit score when complete
+  // Submit score and update streak when complete
   useEffect(() => {
     if (isComplete && !hasSubmitted && user && elapsedTime > 0) {
       submitScore();
+      updateStreak();
     }
   }, [isComplete, hasSubmitted, user, elapsedTime]);
 

@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStreak } from '@/hooks/useStreak';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import StreakBadge from '@/components/StreakBadge';
 import { 
   Brain, 
   ArrowLeft, 
@@ -18,7 +20,8 @@ import {
   Loader2,
   Sparkles,
   BookOpen,
-  Users
+  Users,
+  Flame
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -49,6 +52,7 @@ const DailyQuiz = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { streak, updateStreak } = useStreak('quiz');
   
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
@@ -235,6 +239,7 @@ const DailyQuiz = () => {
     setShowResults(true);
     const score = getScore();
     await saveScore(score);
+    await updateStreak();
   };
 
   const getScore = () => {
@@ -293,10 +298,18 @@ const DailyQuiz = () => {
               <p className="text-muted-foreground">
                 Select a subject to start today's quiz. New questions every day!
               </p>
-              <Badge variant="secondary" className="mt-2 gap-1">
-                <Sparkles className="w-3 h-3" />
-                AI-Generated Daily
-              </Badge>
+              <div className="flex items-center justify-center gap-2 mt-3">
+                <Badge variant="secondary" className="gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  AI-Generated Daily
+                </Badge>
+                {(streak.current_streak > 0 || streak.longest_streak > 0) && (
+                  <Badge variant="default" className="gap-1 bg-orange-500 hover:bg-orange-600">
+                    <Flame className="w-3 h-3" />
+                    {streak.current_streak} day streak
+                  </Badge>
+                )}
+              </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
