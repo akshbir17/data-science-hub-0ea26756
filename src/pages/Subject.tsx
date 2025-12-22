@@ -113,8 +113,16 @@ const Subject = () => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  // Sort resources by title naturally (Module 1 before Module 10)
+  // Sort resources by extracting module/unit numbers for proper ordering
+  const extractNumber = (title: string): number => {
+    const match = title.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 999;
+  };
+
   const sortByTitle = (a: Resource, b: Resource) => {
+    const numA = extractNumber(a.title);
+    const numB = extractNumber(b.title);
+    if (numA !== numB) return numA - numB;
     return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' });
   };
 
