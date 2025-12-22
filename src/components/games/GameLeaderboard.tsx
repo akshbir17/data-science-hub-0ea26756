@@ -14,7 +14,7 @@ interface LeaderboardEntry {
 }
 
 interface GameLeaderboardProps {
-  gameType: 'zip' | 'sudoku';
+  gameType: 'zip' | 'sudoku' | 'queens';
 }
 
 const GameLeaderboard = ({ gameType }: GameLeaderboardProps) => {
@@ -122,7 +122,7 @@ const GameLeaderboard = ({ gameType }: GameLeaderboardProps) => {
           Today's Leaderboard
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          {gameType === 'zip' ? 'Zip' : 'Mini Sudoku'} • {entries.length} players today
+          {gameType === 'zip' ? 'Zip' : gameType === 'sudoku' ? 'Mini Sudoku' : 'Queens'} • {entries.length} players today
         </p>
       </CardHeader>
       <CardContent>
