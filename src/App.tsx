@@ -18,6 +18,7 @@ import Quiz from "./pages/Quiz";
 import Games from "./pages/Games";
 import ZipGame from "./pages/ZipGame";
 import SudokuGame from "./pages/SudokuGame";
+import QueensGame from "./pages/QueensGame";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/games" element={<Games />} />
                 <Route path="/games/zip" element={<ZipGame />} />
                 <Route path="/games/sudoku" element={<SudokuGame />} />
+                <Route path="/games/queens" element={<QueensGame />} />
                 <Route element={<DashboardLayout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/subject/:id" element={<Subject />} />

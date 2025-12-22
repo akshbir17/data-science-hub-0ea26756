@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Gamepad2, Grid3X3, ArrowLeft } from 'lucide-react';
+import { Gamepad2, Grid3X3, ArrowLeft, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Games = () => {
@@ -18,6 +18,13 @@ const Games = () => {
       description: 'Fill the 4x4 grid with numbers 1-4',
       icon: Grid3X3,
       color: 'from-blue-500 to-purple-500',
+    },
+    {
+      id: 'queens',
+      name: 'Queens',
+      description: 'Place one queen per row, column, and color region',
+      icon: Crown,
+      color: 'from-yellow-500 to-orange-500',
     },
   ];
 
