@@ -159,12 +159,12 @@ const ProfileEditDialog = ({ open, onOpenChange }: ProfileEditDialogProps) => {
           </div>
 
           <div className="flex items-center justify-between py-2 border-b border-border/50">
-            <span className="text-sm text-muted-foreground">Location</span>
+            <span className="text-sm text-muted-foreground">Department</span>
             <Input
               value={profile.location || ''}
               onChange={(e) => setProfile({ ...profile, location: e.target.value })}
               className="w-48 text-right border-none bg-transparent focus-visible:ring-0 px-0"
-              placeholder="Add location"
+              placeholder="Add department"
             />
           </div>
 
