@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getISTDateKey } from '@/lib/ist';
 
 interface StreakData {
   current_streak: number;
@@ -35,8 +36,8 @@ export const useStreak = (activityType: 'quiz' | 'sudoku' | 'zip' | 'queens') =>
 
       if (data) {
         // Check if streak is still valid (last activity was yesterday or today)
-        const today = new Date().toISOString().split('T')[0];
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        const today = getISTDateKey();
+        const yesterday = getISTDateKey(new Date(Date.now() - 86400000));
         
         if (data.last_activity_date === today || data.last_activity_date === yesterday) {
           setStreak(data);
@@ -59,8 +60,8 @@ export const useStreak = (activityType: 'quiz' | 'sudoku' | 'zip' | 'queens') =>
   const updateStreak = useCallback(async () => {
     if (!user) return;
 
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const today = getISTDateKey();
+    const yesterday = getISTDateKey(new Date(Date.now() - 86400000));
 
     try {
       // First, get current streak data

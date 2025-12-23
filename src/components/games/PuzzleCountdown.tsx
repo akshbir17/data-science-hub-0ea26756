@@ -1,40 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Clock, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getMsUntilNextMidnightIST } from '@/lib/ist';
 
-// Get current date in IST (UTC+5:30)
-const getISTDate = () => {
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const istTime = new Date(now.getTime() + istOffset);
-  return istTime;
-};
-
-// Get milliseconds until midnight IST
-const getMsUntilMidnightIST = () => {
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const istNow = new Date(now.getTime() + istOffset);
-  
-  // Get midnight IST (start of next day)
-  const midnightIST = new Date(istNow);
-  midnightIST.setUTCHours(24, 0, 0, 0); // Next midnight
-  midnightIST.setUTCDate(istNow.getUTCDate() + 1);
-  midnightIST.setUTCHours(0, 0, 0, 0);
-  
-  // Calculate the actual midnight IST in UTC
-  const nextMidnightIST = new Date(
-    istNow.getUTCFullYear(),
-    istNow.getUTCMonth(),
-    istNow.getUTCDate() + 1,
-    0, 0, 0, 0
-  );
-  
-  // Convert back to UTC by subtracting IST offset
-  const nextMidnightUTC = nextMidnightIST.getTime() - istOffset;
-  
-  return nextMidnightUTC - now.getTime();
-};
 
 const formatCountdown = (ms: number) => {
   if (ms <= 0) return '00:00:00';
@@ -52,12 +20,12 @@ interface PuzzleCountdownProps {
 }
 
 const PuzzleCountdown = ({ onRefresh }: PuzzleCountdownProps) => {
-  const [countdown, setCountdown] = useState(getMsUntilMidnightIST());
+  const [countdown, setCountdown] = useState(() => getMsUntilNextMidnightIST());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const remaining = getMsUntilMidnightIST();
+      const remaining = getMsUntilNextMidnightIST();
       setCountdown(remaining);
       
       // Auto-refresh when countdown hits zero

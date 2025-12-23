@@ -15,6 +15,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { getISTDateKey, getISTDateParts } from '@/lib/ist';
 
 // Seeded random for daily puzzles
 const seededRandom = (seed: number) => {
@@ -22,28 +23,16 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Get current date in IST (UTC+5:30)
-const getISTDate = () => {
-  const now = new Date();
-  // IST is UTC+5:30, so add 5.5 hours in milliseconds
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const istTime = new Date(now.getTime() + istOffset);
-  return {
-    year: istTime.getUTCFullYear(),
-    month: istTime.getUTCMonth() + 1,
-    day: istTime.getUTCDate(),
-  };
-};
-
+// IST date helpers
 const getDailySeed = () => {
-  const { year, month, day } = getISTDate();
+  const { year, month, day } = getISTDateParts();
   return year * 10000 + month * 100 + day;
 };
 
 const getPuzzleNumber = () => {
   const startDate = new Date('2024-01-01T00:00:00+05:30');
-  const { year, month, day } = getISTDate();
-  const currentIST = new Date(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00+05:30`);
+  const todayKey = getISTDateKey();
+  const currentIST = new Date(`${todayKey}T00:00:00+05:30`);
   const diffTime = currentIST.getTime() - startDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   return diffDays + 1;
@@ -221,7 +210,7 @@ const QueensGame = () => {
     const checkExistingScore = async () => {
       if (!user) return;
       
-      const todayDate = new Date().toISOString().split('T')[0];
+      const todayDate = getISTDateKey();
       const { data } = await supabase
         .from('game_scores')
         .select('time_seconds')
@@ -339,7 +328,7 @@ const QueensGame = () => {
         .upsert({
           user_id: user.id,
           game_type: 'queens',
-          puzzle_date: new Date().toISOString().split('T')[0],
+          puzzle_date: getISTDateKey(),
           time_seconds: elapsedTime,
         }, {
           onConflict: 'user_id,game_type,puzzle_date'
