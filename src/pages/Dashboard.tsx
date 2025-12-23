@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useOfflineCache } from '@/hooks/useOfflineCache';
 import { 
   BookOpen, 
   Calculator, 
@@ -78,14 +79,53 @@ const CircularProgress = ({ progress, size = 48 }: { progress: number; size?: nu
 const Dashboard = () => {
   const { user, userRole } = useAuth();
   const { t } = useLanguage();
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [resourceCounts, setResourceCounts] = useState<Record<string, number>>({});
   const [isTeacher, setIsTeacher] = useState(false);
 
+  // Fetcher for subjects with resource counts
+  const fetchSubjectsData = useCallback(async () => {
+    const { data: subjectsData, error: subjectsError } = await supabase
+      .from('subjects')
+      .select('*')
+      .order('name');
+
+    if (subjectsError) throw subjectsError;
+
+    const subjects = subjectsData || [];
+    const counts: Record<string, number> = {};
+
+    if (subjects.length > 0) {
+      // Fetch all resource counts in parallel for better performance
+      const countPromises = subjects.map(async (subject) => {
+        const { count } = await supabase
+          .from('resources')
+          .select('*', { count: 'exact', head: true })
+          .eq('subject_id', subject.id);
+        return { id: subject.id, count: count || 0 };
+      });
+
+      const results = await Promise.all(countPromises);
+      results.forEach(({ id, count }) => {
+        counts[id] = count;
+      });
+    }
+
+    return { subjects, resourceCounts: counts };
+  }, []);
+
+  // Use offline cache with stale-while-revalidate
+  const { data: cachedData, loading, isStale } = useOfflineCache(
+    'dashboard_subjects',
+    fetchSubjectsData,
+    { ttl: 1000 * 60 * 30 } // 30 minutes TTL
+  );
+
+  const subjects = cachedData?.subjects || [];
+  const resourceCounts = cachedData?.resourceCounts || {};
+
   useEffect(() => {
-    fetchSubjects();
-    checkIfTeacher();
+    if (user) {
+      checkIfTeacher();
+    }
   }, [user]);
 
   const checkIfTeacher = async () => {
@@ -97,35 +137,6 @@ const Dashboard = () => {
       .maybeSingle();
     // Teacher = no USN
     setIsTeacher(!data?.usn);
-  };
-
-  const fetchSubjects = async () => {
-    try {
-      const { data: subjectsData, error: subjectsError } = await supabase
-        .from('subjects')
-        .select('*')
-        .order('name');
-
-      if (subjectsError) throw subjectsError;
-
-      setSubjects(subjectsData || []);
-
-      if (subjectsData) {
-        const counts: Record<string, number> = {};
-        for (const subject of subjectsData) {
-          const { count } = await supabase
-            .from('resources')
-            .select('*', { count: 'exact', head: true })
-            .eq('subject_id', subject.id);
-          counts[subject.id] = count || 0;
-        }
-        setResourceCounts(counts);
-      }
-    } catch (error) {
-      console.error('Error fetching subjects:', error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const thirdSemSubjects = subjects.filter(s => s.semester === '3rd');

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,6 +40,7 @@ import {
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useOfflineCache, invalidateCache } from '@/hooks/useOfflineCache';
 
 interface Subject {
   id: string;
@@ -63,9 +64,6 @@ interface Resource {
 const Subject = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const [subject, setSubject] = useState<Subject | null>(null);
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
@@ -76,11 +74,48 @@ const Subject = () => {
   const [deletingResource, setDeletingResource] = useState<Resource | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      fetchSubjectAndResources();
-    }
+  // Fetcher for subject and resources
+  const fetchSubjectData = useCallback(async () => {
+    if (!id) throw new Error('No subject ID');
+
+    const { data: subjectData, error: subjectError } = await supabase
+      .from('subjects')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (subjectError) throw subjectError;
+
+    const { data: resourcesData, error: resourcesError } = await supabase
+      .from('resources')
+      .select('*')
+      .eq('subject_id', id)
+      .order('created_at', { ascending: false });
+
+    if (resourcesError) throw resourcesError;
+
+    return {
+      subject: subjectData as Subject,
+      resources: (resourcesData || []) as Resource[]
+    };
   }, [id]);
+
+  // Use offline cache with stale-while-revalidate
+  const { data: cachedData, loading, refresh } = useOfflineCache(
+    `subject_${id}`,
+    fetchSubjectData,
+    { ttl: 1000 * 60 * 30, enabled: !!id } // 30 minutes TTL
+  );
+
+  const subject = cachedData?.subject || null;
+  const [resources, setResources] = useState<Resource[]>([]);
+
+  // Sync resources from cache when it updates
+  useEffect(() => {
+    if (cachedData?.resources) {
+      setResources(cachedData.resources);
+    }
+  }, [cachedData]);
 
   useEffect(() => {
     const checkAdminRole = async () => {
@@ -98,32 +133,6 @@ const Subject = () => {
     };
     checkAdminRole();
   }, [user]);
-
-  const fetchSubjectAndResources = async () => {
-    try {
-      const { data: subjectData, error: subjectError } = await supabase
-        .from('subjects')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (subjectError) throw subjectError;
-      setSubject(subjectData);
-
-      const { data: resourcesData, error: resourcesError } = await supabase
-        .from('resources')
-        .select('*')
-        .eq('subject_id', id)
-        .order('created_at', { ascending: false });
-
-      if (resourcesError) throw resourcesError;
-      setResources(resourcesData || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getFileUrl = (filePath: string) => {
     const { data } = supabase.storage.from('resources').getPublicUrl(filePath);
@@ -223,6 +232,9 @@ const Subject = () => {
       if (dbError) throw dbError;
 
       setResources(prev => prev.filter(r => r.id !== deletingResource.id));
+      // Invalidate caches so next visit gets fresh data
+      invalidateCache(`subject_${id}`);
+      invalidateCache('dashboard_subjects');
       toast.success('Resource deleted successfully');
       setDeleteDialogOpen(false);
     } catch (error) {
