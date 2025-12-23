@@ -60,12 +60,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
 
-      if (session?.user) {
-        fetchUserRole(session.user.id).catch((e) => {
-          console.warn('Failed to fetch role (listener):', e);
-        });
-      } else {
+      if (!session?.user) {
         setUserRole(null);
+      } else {
+        // Defer DB calls to avoid occasional deadlocks inside auth callbacks
+        window.setTimeout(() => {
+          fetchUserRole(session.user.id).catch((e) => {
+            console.warn('Failed to fetch role (listener):', e);
+          });
+        }, 0);
       }
 
       setLoading(false);
@@ -86,7 +89,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          await fetchUserRole(session.user.id);
+          window.setTimeout(() => {
+            fetchUserRole(session.user.id).catch((e) => {
+              console.warn('Failed to fetch role (init):', e);
+            });
+          }, 0);
         }
       } catch (e) {
         console.error('Auth init failed:', e);
