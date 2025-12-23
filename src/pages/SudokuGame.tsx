@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, RotateCcw, Trophy, Clock, XCircle, Flame } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import GameLeaderboard from '@/components/games/GameLeaderboard';
+import PuzzleCountdown from '@/components/games/PuzzleCountdown';
 
 // Seeded random for daily puzzles
 const seededRandom = (seed: number) => {
@@ -431,10 +432,12 @@ const SudokuGame = () => {
             <Button 
               onClick={() => setShowLeaderboard(true)} 
               variant="outline" 
-              className="w-full"
+              className="w-full mb-4"
             >
               See Results
             </Button>
+
+            <PuzzleCountdown />
           </>
         )}
       </main>
