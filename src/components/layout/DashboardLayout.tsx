@@ -1,14 +1,40 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import Header from './Header';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, LogOut } from 'lucide-react';
 
 const DashboardLayout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [timedOut, setTimedOut] = useState(false);
+
+  const clearAuthStorage = () => {
+    try {
+      Object.keys(window.localStorage)
+        .filter((k) => k.startsWith('sb-') && k.endsWith('-auth-token'))
+        .forEach((k) => window.localStorage.removeItem(k));
+    } catch {
+      // ignore
+    }
+
+    try {
+      Object.keys(window.sessionStorage)
+        .filter((k) => k.startsWith('sb-') && k.endsWith('-auth-token'))
+        .forEach((k) => window.sessionStorage.removeItem(k));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleResetLogin = () => {
+    // Best-effort sign-out; if offline, still clear local auth state.
+    void supabase.auth.signOut().catch(() => {});
+    clearAuthStorage();
+    window.location.assign('/auth');
+  };
 
   useEffect(() => {
     if (!loading) {
@@ -38,16 +64,22 @@ const DashboardLayout = () => {
           {timedOut && (
             <div className="mt-1 flex flex-col items-center gap-3">
               <p className="text-sm text-muted-foreground text-center max-w-xs">
-                Having trouble loading? Check your internet and tap Retry.
+                Having trouble loading? Check your internet and tap Retry. If it still gets stuck, tap Reset Login.
               </p>
-              <Button
-                variant="outline"
-                onClick={() => window.location.reload()}
-                className="rounded-xl"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Retry
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.reload()}
+                  className="rounded-xl"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Retry
+                </Button>
+                <Button variant="destructive" onClick={handleResetLogin} className="rounded-xl">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Reset Login
+                </Button>
+              </div>
             </div>
           )}
         </div>
