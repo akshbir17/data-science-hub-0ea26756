@@ -4,6 +4,7 @@ import { Gamepad2, Grid3X3, ArrowLeft, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStreak } from '@/hooks/useStreak';
 import StreakBadge from '@/components/StreakBadge';
+import PuzzleCountdown from '@/components/games/PuzzleCountdown';
 
 const GameCard = ({ game }: { game: { id: string; name: string; description: string; icon: any; color: string } }) => {
   const activityType = game.id as 'sudoku' | 'zip' | 'queens';
@@ -80,6 +81,9 @@ const Games = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto mb-6">
+          <PuzzleCountdown />
+        </div>
         <div className="grid gap-6 sm:grid-cols-2 max-w-2xl mx-auto">
           {games.map((game) => (
             <GameCard key={game.id} game={game} />
