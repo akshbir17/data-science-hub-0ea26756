@@ -30,45 +30,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .single();
-    
-    if (!error && data) {
-      setUserRole(data.role as UserRole);
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Failed to fetch user role:', error);
+      setUserRole(null);
+      return;
     }
+
+    setUserRole((data?.role as UserRole) ?? null);
   };
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserRole(session.user.id);
-          }, 0);
-        } else {
-          setUserRole(null);
-        }
-        
-        setLoading(false);
-      }
-    );
+    let cancelled = false;
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Fail-safe: never keep the UI stuck on "Loading" forever
+    const failSafeTimeout = window.setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, 8000);
+
+    // Set up auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return;
+
+      window.clearTimeout(failSafeTimeout);
+
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        fetchUserRole(session.user.id).catch((e) => {
+          console.warn('Failed to fetch role (listener):', e);
+        });
+      } else {
+        setUserRole(null);
       }
-      
+
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Check for existing session
+    (async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (cancelled) return;
+
+        if (error) {
+          console.warn('getSession error:', error);
+        }
+
+        const session = data.session;
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          await fetchUserRole(session.user.id);
+        }
+      } catch (e) {
+        console.error('Auth init failed:', e);
+      } finally {
+        if (!cancelled) setLoading(false);
+        window.clearTimeout(failSafeTimeout);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(failSafeTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
