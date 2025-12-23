@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Trophy, Medal, Clock } from 'lucide-react';
+import { getISTDateKey } from '@/lib/ist';
 
 interface LeaderboardEntry {
   rank: number;
@@ -21,7 +22,7 @@ const GameLeaderboard = ({ gameType }: GameLeaderboardProps) => {
   const { user } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [todayDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [todayDate] = useState(() => getISTDateKey());
 
   useEffect(() => {
     fetchLeaderboard();
