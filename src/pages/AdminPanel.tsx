@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Shield, Users, Search, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Shield, Users, Search, AlertTriangle, Trash2 } from 'lucide-react';
 
 interface UserWithRole {
   user_id: string;
@@ -28,6 +30,7 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   // Redirect non-admins
   useEffect(() => {
@@ -146,6 +149,53 @@ const AdminPanel = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    if (userId === user?.id) {
+      toast({
+        title: 'Cannot delete yourself',
+        description: 'You cannot delete your own account.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setDeletingUserId(userId);
+    try {
+      // Delete from user_roles first
+      const { error: rolesError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (rolesError) throw rolesError;
+
+      // Delete from profiles
+      const { error: profilesError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (profilesError) throw profilesError;
+
+      // Update local state
+      setUsers((prev) => prev.filter((u) => u.user_id !== userId));
+
+      toast({
+        title: 'User removed',
+        description: 'User has been removed from the system.',
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete user.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
+
   const filteredUsers = users.filter((u) => {
     const term = searchTerm.toLowerCase();
     return (
@@ -254,6 +304,7 @@ const AdminPanel = () => {
                     <TableHead className="hidden sm:table-cell">Email</TableHead>
                     <TableHead className="hidden md:table-cell">USN</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead className="w-16">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -295,6 +346,42 @@ const AdminPanel = () => {
                               <SelectItem value="admin">admin</SelectItem>
                             </SelectContent>
                           </Select>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {u.user_id === user?.id ? (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        ) : (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                disabled={deletingUserId === u.user_id}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remove User</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to remove <strong>{u.full_name || u.email || 'this user'}</strong>? 
+                                  This will delete their profile and role data. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteUser(u.user_id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Remove
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         )}
                       </TableCell>
                     </TableRow>
