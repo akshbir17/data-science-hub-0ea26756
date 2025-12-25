@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Upload, Calculator, Gamepad2, Brain, Download } from 'lucide-react';
+import { BookOpen, Upload, Calculator, Gamepad2, Brain, Download, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import UserProfileDropdown from '@/components/profile/UserProfileDropdown';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -79,12 +79,20 @@ const Header = () => {
               </Link>
               
               {userRole === 'admin' && (
-                <Link to="/admin/upload">
-                  <Button size="sm" className="gap-2 rounded-xl gradient-purple shadow-glow-sm hover:shadow-glow transition-all">
-                    <Upload className="w-4 h-4" />
-                    <span className="hidden sm:inline">{t('upload')}</span>
-                  </Button>
-                </Link>
+                <>
+                  <Link to="/admin/panel">
+                    <Button variant="ghost" size="sm" className="gap-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50">
+                      <Shield className="w-4 h-4" />
+                      <span className="hidden sm:inline">Admin</span>
+                    </Button>
+                  </Link>
+                  <Link to="/admin/upload">
+                    <Button size="sm" className="gap-2 rounded-xl gradient-purple shadow-glow-sm hover:shadow-glow transition-all">
+                      <Upload className="w-4 h-4" />
+                      <span className="hidden sm:inline">{t('upload')}</span>
+                    </Button>
+                  </Link>
+                </>
               )}
               
               <UserProfileDropdown />
