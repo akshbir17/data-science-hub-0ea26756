@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Subject from "./pages/Subject";
 import AdminUpload from "./pages/AdminUpload";
+import AdminPanel from "./pages/AdminPanel";
 import Calculator from "./pages/Calculator";
 import Games from "./pages/Games";
 import ZipGame from "./pages/ZipGame";
@@ -49,6 +50,7 @@ const App = () => (
                   <Route path="/subject/:id" element={<Subject />} />
                   <Route path="/timetable" element={<Timetable />} />
                   <Route path="/admin/upload" element={<AdminUpload />} />
+                  <Route path="/admin/panel" element={<AdminPanel />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
