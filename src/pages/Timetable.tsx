@@ -49,6 +49,7 @@ const timetableData: DaySchedule[] = [
       null, // Lunch
       { subject: 'DDCO', room: '327' },
       { subject: 'DAR', room: '327' },
+      { subject: 'DSA', room: '327' },
     ],
   },
   {
