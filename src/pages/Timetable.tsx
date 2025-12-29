@@ -18,62 +18,62 @@ const timetableData: DaySchedule[] = [
   {
     day: 'MON',
     slots: [
-      { subject: 'OS', room: '327' },
-      { subject: 'DDCO', room: '327' },
-      { subject: 'DSA', room: '327' },
-      { subject: 'M3', room: '327' },
+      { subject: 'OS', room: '327', teacher: 'ZM' },
+      { subject: 'DDCO', room: '327', teacher: 'VD' },
+      { subject: 'DSA', room: '327', teacher: 'HP' },
+      { subject: 'M3', room: '327', teacher: 'PP' },
       null, // Lunch
-      { subject: 'R Lab', room: 'Bot Lab' },
-      { subject: 'DSA', room: '327' },
+      { subject: 'R Lab', room: 'Bot Lab', teacher: 'RG' },
+      { subject: 'DSA', room: '327', teacher: 'HP' },
     ],
   },
   {
     day: 'TUE',
     slots: [
-      { subject: 'DAR', room: '327' },
-      { subject: 'M3', room: '327' },
-      { subject: 'OS', room: '327' },
-      { subject: 'DDCO', room: '327' },
+      { subject: 'DAR', room: '327', teacher: 'RG' },
+      { subject: 'M3', room: '327', teacher: 'PP' },
+      { subject: 'OS', room: '327', teacher: 'ZM' },
+      { subject: 'DDCO', room: '327', teacher: 'VD' },
       null, // Lunch
-      { subject: 'DDCO Lab', room: 'Bot Lab' },
-      { subject: 'M3', room: '327' },
+      { subject: 'DDCO Lab', room: 'Bot Lab', teacher: 'MN' },
+      { subject: 'M3', room: '327', teacher: 'PP' },
     ],
   },
   {
     day: 'WED',
     slots: [
-      { subject: 'PHP Lab', room: 'Bot Lab' },
-      { subject: 'M3', room: '327' },
-      { subject: 'OS', room: '327' },
+      { subject: 'PHP Lab', room: 'Bot Lab', teacher: 'ZM' },
+      { subject: 'M3', room: '327', teacher: 'PP' },
+      { subject: 'OS', room: '327', teacher: 'ZM' },
       null,
       null, // Lunch
-      { subject: 'DDCO', room: '327' },
-      { subject: 'DAR', room: '327' },
-      { subject: 'DSA', room: '327' },
+      { subject: 'DDCO', room: '327', teacher: 'VD' },
+      { subject: 'DAR', room: '327', teacher: 'RG' },
+      { subject: 'DSA', room: '327', teacher: 'HP' },
     ],
   },
   {
     day: 'THU',
     slots: [
-      { subject: 'DDCO', room: '327' },
-      { subject: 'M3', room: '327' },
-      { subject: 'DAR', room: '327' },
-      { subject: 'OS', room: '327' },
+      { subject: 'DDCO', room: '327', teacher: 'VD' },
+      { subject: 'M3', room: '327', teacher: 'PP' },
+      { subject: 'DAR', room: '327', teacher: 'RG' },
+      { subject: 'OS', room: '327', teacher: 'ZM' },
       null, // Lunch
-      { subject: 'DSA', room: '327' },
-      { subject: 'OS Lab', room: 'Bot Lab' },
+      { subject: 'DSA', room: '327', teacher: 'HP' },
+      { subject: 'OS Lab', room: 'Bot Lab', teacher: 'ZM' },
     ],
   },
   {
     day: 'FRI',
     slots: [
-      { subject: 'DDCO', room: '327' },
-      { subject: 'DSA', room: '327' },
-      { subject: 'DAR', room: '327' },
-      { subject: 'OS', room: '327' },
+      { subject: 'DDCO', room: '327', teacher: 'VD' },
+      { subject: 'DSA', room: '327', teacher: 'HP' },
+      { subject: 'DAR', room: '327', teacher: 'RG' },
+      { subject: 'OS', room: '327', teacher: 'ZM' },
       null, // Lunch
-      { subject: 'DSA Lab', room: 'Bot Lab' },
-      { subject: 'SCR(UHV)', room: '327' },
+      { subject: 'DSA Lab', room: 'Bot Lab', teacher: 'HP' },
+      { subject: 'SCR(UHV)', room: '327', teacher: 'ZM' },
     ],
   },
   {
@@ -202,8 +202,11 @@ const Timetable = () => {
                         ) : slot ? (
                           <div className={`rounded-lg p-2 border ${getSubjectColor(slot.subject)}`}>
                             <div className="font-medium text-sm">{slot.subject}</div>
+                            {slot.teacher && (
+                              <div className="text-xs opacity-80">{slot.teacher}</div>
+                            )}
                             {slot.room && (
-                              <div className="text-xs opacity-70">{slot.room}</div>
+                              <div className="text-xs opacity-60">{slot.room}</div>
                             )}
                           </div>
                         ) : (
@@ -252,6 +255,9 @@ const Timetable = () => {
                     <div>
                       <div className="font-medium">{slot.subject}</div>
                       <div className="text-xs opacity-70">{periods[idx].time}</div>
+                      {slot.teacher && (
+                        <div className="text-xs opacity-80 mt-0.5">Faculty: {slot.teacher}</div>
+                      )}
                     </div>
                     {slot.room && (
                       <Badge variant="outline" className="text-xs">
