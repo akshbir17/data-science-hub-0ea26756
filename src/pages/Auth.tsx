@@ -50,6 +50,7 @@ const Auth = () => {
   
   // Student form
   const [isTeacher, setIsTeacher] = useState(false);
+  const [wantsUSN, setWantsUSN] = useState(true);
   const [studentUSN, setStudentUSN] = useState('');
   const [studentPassword, setStudentPassword] = useState('');
   const [studentName, setStudentName] = useState('');
@@ -136,8 +137,8 @@ const Auth = () => {
           navigate('/dashboard');
         }
       } else {
-        // Signup - USN required only for students (not teachers)
-        if (!isTeacher) {
+        // Signup - USN validation only if user wants to provide USN and is not a teacher
+        if (!isTeacher && wantsUSN && studentUSN) {
           const usnResult = usnSchema.safeParse(studentUSN);
           if (!usnResult.success) {
             toast({ title: 'Validation Error', description: usnResult.error.errors[0].message, variant: 'destructive' });
@@ -167,8 +168,8 @@ const Auth = () => {
           return;
         }
 
-        // Check if USN already exists (for students only)
-        if (!isTeacher && studentUSN) {
+        // Check if USN already exists (only if providing USN)
+        if (!isTeacher && wantsUSN && studentUSN) {
           const { data: existingProfile } = await supabase
             .from('profiles')
             .select('usn')
@@ -205,7 +206,7 @@ const Auth = () => {
 
         const { error } = await signUp(studentEmail, studentPassword, {
           full_name: studentName.trim(),
-          usn: isTeacher ? null : studentUSN.toUpperCase(),
+          usn: (isTeacher || !wantsUSN) ? null : studentUSN.toUpperCase(),
           role: 'student',
           email: studentEmail.trim(),
         });
@@ -346,17 +347,33 @@ const Auth = () => {
                         <p className="text-xs text-muted-foreground">Required for password recovery</p>
                       </div>
                       {!isTeacher && (
-                        <div className="space-y-2">
-                          <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
-                          <Input
-                            id="usn"
-                            placeholder="e.g., 3GN24CD000"
-                            value={studentUSN}
-                            onChange={(e) => setStudentUSN(e.target.value.toUpperCase())}
-                            required={!isTeacher}
-                            className="bg-input border-border/50 rounded-xl uppercase focus:border-primary"
-                          />
-                        </div>
+                        <>
+                          {/* USN Toggle */}
+                          <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border/30">
+                            <div className="flex items-center gap-2">
+                              <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm text-foreground">Add my USN</span>
+                            </div>
+                            <Switch
+                              checked={wantsUSN}
+                              onCheckedChange={setWantsUSN}
+                            />
+                          </div>
+                          
+                          {wantsUSN && (
+                            <div className="space-y-2">
+                              <Label htmlFor="usn" className="text-foreground">University Seat Number (USN)</Label>
+                              <Input
+                                id="usn"
+                                placeholder="e.g., 3GN24CD000"
+                                value={studentUSN}
+                                onChange={(e) => setStudentUSN(e.target.value.toUpperCase())}
+                                required={wantsUSN}
+                                className="bg-input border-border/50 rounded-xl uppercase focus:border-primary"
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
                     </>
                   )}
