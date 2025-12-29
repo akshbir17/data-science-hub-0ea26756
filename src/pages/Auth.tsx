@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { GraduationCap, ShieldCheck, BookOpen, Loader2, Mail, Users } from 'lucide-react';
 import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
 
 const emailSchema = z.string().email('Invalid email address');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -162,6 +163,42 @@ const Auth = () => {
         const passwordResult = passwordSchema.safeParse(studentPassword);
         if (!passwordResult.success) {
           toast({ title: 'Validation Error', description: passwordResult.error.errors[0].message, variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+
+        // Check if USN already exists (for students only)
+        if (!isTeacher && studentUSN) {
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('usn')
+            .eq('usn', studentUSN.toUpperCase())
+            .maybeSingle();
+          
+          if (existingProfile) {
+            toast({ 
+              title: 'USN Already Registered', 
+              description: 'This USN is already associated with an account. Please login instead or use a different USN.', 
+              variant: 'destructive' 
+            });
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Check if email already exists
+        const { data: existingEmail } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('email', studentEmail.trim().toLowerCase())
+          .maybeSingle();
+        
+        if (existingEmail) {
+          toast({ 
+            title: 'Email Already Registered', 
+            description: 'This email is already associated with an account. Please login instead.', 
+            variant: 'destructive' 
+          });
           setLoading(false);
           return;
         }
