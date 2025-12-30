@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Gamepad2, Grid3X3, ArrowLeft, Crown } from 'lucide-react';
+import { ArrowLeft, Bird } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useStreak } from '@/hooks/useStreak';
-import StreakBadge from '@/components/StreakBadge';
-import PuzzleCountdown from '@/components/games/PuzzleCountdown';
+
+const SnakeIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2c-2 0-4 2-4 4s2 4 4 4 4 2 4 4-2 4-4 4" />
+    <circle cx="12" cy="6" r="1" fill="currentColor" />
+  </svg>
+);
 
 const GameCard = ({ game }: { game: { id: string; name: string; description: string; icon: any; color: string } }) => {
-  const activityType = game.id as 'sudoku' | 'zip' | 'queens';
-  const { streak } = useStreak(activityType);
-
   return (
     <Link to={`/games/${game.id}`} className="perspective-1000">
       <Card className="glass-card border-border/30 hover:border-primary/50 transition-all duration-300 cursor-pointer group h-full transform-gpu hover:rotate-y-3 hover:-rotate-x-3 hover:scale-105 hover:shadow-xl hover:shadow-primary/10">
@@ -18,11 +19,6 @@ const GameCard = ({ game }: { game: { id: string; name: string; description: str
             <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${game.color} flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 shadow-lg`}>
               <game.icon className="w-8 h-8 text-white drop-shadow-md" />
             </div>
-            <StreakBadge 
-              currentStreak={streak.current_streak} 
-              longestStreak={streak.longest_streak}
-              size="sm"
-            />
           </div>
           <CardTitle className="group-hover:text-primary transition-colors">
             {game.name}
@@ -39,25 +35,18 @@ const GameCard = ({ game }: { game: { id: string; name: string; description: str
 const Games = () => {
   const games = [
     {
-      id: 'zip',
-      name: 'Zip',
-      description: 'Connect the dots in order and fill every cell',
-      icon: Gamepad2,
-      color: 'from-orange-500 to-red-500',
+      id: 'snake',
+      name: 'Snake',
+      description: 'Classic snake game - eat food and grow longer without hitting walls or yourself!',
+      icon: SnakeIcon,
+      color: 'from-green-500 to-emerald-600',
     },
     {
-      id: 'sudoku',
-      name: 'Mini Sudoku',
-      description: 'Fill the 6x6 grid with numbers 1-6',
-      icon: Grid3X3,
-      color: 'from-blue-500 to-purple-500',
-    },
-    {
-      id: 'queens',
-      name: 'Queens',
-      description: 'Place one queen per row, column, and color region',
-      icon: Crown,
-      color: 'from-yellow-500 to-orange-500',
+      id: 'flappy-bird',
+      name: 'Flappy Bird',
+      description: 'Tap to fly through the pipes - how far can you go?',
+      icon: Bird,
+      color: 'from-yellow-400 to-orange-500',
     },
   ];
 
@@ -73,17 +62,14 @@ const Games = () => {
               </Button>
             </Link>
             <div>
-              <h1 className="text-lg font-semibold">Daily Games</h1>
-              <p className="text-xs text-muted-foreground">New puzzles every day at 12:00 AM IST</p>
+              <h1 className="text-lg font-semibold">Games</h1>
+              <p className="text-xs text-muted-foreground">Fun arcade games to play anytime!</p>
             </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto mb-6">
-          <PuzzleCountdown />
-        </div>
         <div className="grid gap-6 sm:grid-cols-2 max-w-2xl mx-auto">
           {games.map((game) => (
             <GameCard key={game.id} game={game} />

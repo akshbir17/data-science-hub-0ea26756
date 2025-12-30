@@ -16,9 +16,8 @@ import AdminUpload from "./pages/AdminUpload";
 import AdminPanel from "./pages/AdminPanel";
 import Calculator from "./pages/Calculator";
 import Games from "./pages/Games";
-import ZipGame from "./pages/ZipGame";
-import SudokuGame from "./pages/SudokuGame";
-import QueensGame from "./pages/QueensGame";
+import SnakeGame from "./pages/SnakeGame";
+import FlappyBirdGame from "./pages/FlappyBirdGame";
 import DailyQuiz from "./pages/DailyQuiz";
 import Timetable from "./pages/Timetable";
 import NotFound from "./pages/NotFound";
@@ -41,9 +40,8 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/calculator" element={<Calculator />} />
                 <Route path="/games" element={<Games />} />
-                <Route path="/games/zip" element={<ZipGame />} />
-                <Route path="/games/sudoku" element={<SudokuGame />} />
-                <Route path="/games/queens" element={<QueensGame />} />
+                <Route path="/games/snake" element={<SnakeGame />} />
+                <Route path="/games/flappy-bird" element={<FlappyBirdGame />} />
                 <Route path="/quiz" element={<DailyQuiz />} />
                 <Route element={<DashboardLayout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
