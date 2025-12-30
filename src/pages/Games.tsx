@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Bird } from 'lucide-react';
+import { ArrowLeft, Bird, Grid3X3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const SnakeIcon = ({ className }: { className?: string }) => (
@@ -47,6 +47,13 @@ const Games = () => {
       description: 'Tap to fly through the pipes - how far can you go?',
       icon: Bird,
       color: 'from-yellow-400 to-orange-500',
+    },
+    {
+      id: '2048',
+      name: '2048',
+      description: 'Slide tiles to combine them and reach 2048!',
+      icon: Grid3X3,
+      color: 'from-amber-500 to-orange-600',
     },
   ];
 
