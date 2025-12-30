@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   userRole: UserRole;
+  isAdmin: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithUSN: (usn: string, password: string) => Promise<{ error: Error | null }>;
@@ -183,8 +184,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserRole(null);
   };
 
+  const isAdmin = userRole === 'admin';
+
   return (
-    <AuthContext.Provider value={{ user, session, userRole, loading, signIn, signInWithUSN, signInWithGoogle, signUp, signOut, resetPassword }}>
+    <AuthContext.Provider value={{ user, session, userRole, isAdmin, loading, signIn, signInWithUSN, signInWithGoogle, signUp, signOut, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
