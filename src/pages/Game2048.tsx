@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -127,21 +127,21 @@ const hasWon = (grid: Grid): boolean => {
   return false;
 };
 
-const getTileColor = (value: number | null): string => {
-  const colors: Record<number, string> = {
-    2: 'bg-amber-100 text-amber-900',
-    4: 'bg-amber-200 text-amber-900',
-    8: 'bg-orange-300 text-white',
-    16: 'bg-orange-400 text-white',
-    32: 'bg-orange-500 text-white',
-    64: 'bg-red-500 text-white',
-    128: 'bg-yellow-400 text-white',
-    256: 'bg-yellow-500 text-white',
-    512: 'bg-yellow-600 text-white',
-    1024: 'bg-yellow-700 text-white',
-    2048: 'bg-yellow-500 text-white',
+const getTileStyle = (value: number | null): { bg: string; text: string; shadow: string } => {
+  const styles: Record<number, { bg: string; text: string; shadow: string }> = {
+    2: { bg: 'linear-gradient(145deg, #eee4da 0%, #e0d6cc 100%)', text: '#776e65', shadow: 'rgba(238, 228, 218, 0.5)' },
+    4: { bg: 'linear-gradient(145deg, #ede0c8 0%, #e0d3bb 100%)', text: '#776e65', shadow: 'rgba(237, 224, 200, 0.5)' },
+    8: { bg: 'linear-gradient(145deg, #f2b179 0%, #e5a46c 100%)', text: '#f9f6f2', shadow: 'rgba(242, 177, 121, 0.5)' },
+    16: { bg: 'linear-gradient(145deg, #f59563 0%, #e88856 100%)', text: '#f9f6f2', shadow: 'rgba(245, 149, 99, 0.5)' },
+    32: { bg: 'linear-gradient(145deg, #f67c5f 0%, #e96f52 100%)', text: '#f9f6f2', shadow: 'rgba(246, 124, 95, 0.5)' },
+    64: { bg: 'linear-gradient(145deg, #f65e3b 0%, #e9512e 100%)', text: '#f9f6f2', shadow: 'rgba(246, 94, 59, 0.5)' },
+    128: { bg: 'linear-gradient(145deg, #edcf72 0%, #e0c265 100%)', text: '#f9f6f2', shadow: 'rgba(237, 207, 114, 0.6)' },
+    256: { bg: 'linear-gradient(145deg, #edcc61 0%, #e0bf54 100%)', text: '#f9f6f2', shadow: 'rgba(237, 204, 97, 0.6)' },
+    512: { bg: 'linear-gradient(145deg, #edc850 0%, #e0bb43 100%)', text: '#f9f6f2', shadow: 'rgba(237, 200, 80, 0.6)' },
+    1024: { bg: 'linear-gradient(145deg, #edc53f 0%, #e0b832 100%)', text: '#f9f6f2', shadow: 'rgba(237, 197, 63, 0.6)' },
+    2048: { bg: 'linear-gradient(145deg, #edc22e 0%, #e0b521 100%)', text: '#f9f6f2', shadow: 'rgba(237, 194, 46, 0.8)' },
   };
-  return value ? colors[value] || 'bg-purple-600 text-white' : 'bg-secondary/50';
+  return value ? styles[value] || { bg: 'linear-gradient(145deg, #3c3a32 0%, #2f2d25 100%)', text: '#f9f6f2', shadow: 'rgba(60, 58, 50, 0.6)' } : { bg: 'rgba(238, 228, 218, 0.35)', text: 'transparent', shadow: 'none' };
 };
 
 const Game2048 = () => {
@@ -150,6 +150,8 @@ const Game2048 = () => {
   const [highScore, setHighScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const gameContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('2048-high-score');
@@ -184,9 +186,29 @@ const Game2048 = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key.toLowerCase())) {
         e.preventDefault();
-        const direction = e.key.replace('Arrow', '').toLowerCase() as 'left' | 'right' | 'up' | 'down';
+        let direction: 'left' | 'right' | 'up' | 'down';
+        switch (e.key.toLowerCase()) {
+          case 'arrowup':
+          case 'w':
+            direction = 'up';
+            break;
+          case 'arrowdown':
+          case 's':
+            direction = 'down';
+            break;
+          case 'arrowleft':
+          case 'a':
+            direction = 'left';
+            break;
+          case 'arrowright':
+          case 'd':
+            direction = 'right';
+            break;
+          default:
+            return;
+        }
         handleMove(direction);
       }
     };
@@ -194,6 +216,33 @@ const Game2048 = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleMove]);
+
+  // Touch/swipe handling
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    const minSwipeDistance = 30;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (Math.abs(deltaX) > minSwipeDistance) {
+        handleMove(deltaX > 0 ? 'right' : 'left');
+      }
+    } else {
+      if (Math.abs(deltaY) > minSwipeDistance) {
+        handleMove(deltaY > 0 ? 'down' : 'up');
+      }
+    }
+    
+    touchStartRef.current = null;
+  };
 
   const resetGame = () => {
     setGrid(createInitialGrid());
@@ -224,57 +273,81 @@ const Game2048 = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-sm mx-auto space-y-6">
           {/* Score Display */}
-          <div className="flex justify-between items-center gap-4">
-            <Card className="glass-card border-border/30 flex-1">
+          <div className="flex justify-between items-center gap-3">
+            <Card className="glass-card border-border/30 flex-1 transform hover:scale-105 transition-transform duration-300">
               <CardContent className="p-4 text-center">
                 <p className="text-xs text-muted-foreground">Score</p>
-                <p className="text-2xl font-bold text-primary">{score}</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{score}</p>
               </CardContent>
             </Card>
-            <Card className="glass-card border-border/30 flex-1">
+            <Card className="glass-card border-border/30 flex-1 transform hover:scale-105 transition-transform duration-300">
               <CardContent className="p-4 text-center">
                 <p className="text-xs text-muted-foreground">Best</p>
-                <p className="text-2xl font-bold text-yellow-500">{highScore}</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">{highScore}</p>
               </CardContent>
             </Card>
-            <Button onClick={resetGame} variant="outline" size="icon" className="h-14 w-14">
+            <Button 
+              onClick={resetGame} 
+              variant="outline" 
+              size="icon" 
+              className="h-14 w-14 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200"
+            >
               <RotateCcw className="w-5 h-5" />
             </Button>
           </div>
 
           {/* Game Board */}
-          <Card className="glass-card border-border/30">
+          <Card className="glass-card border-border/30 shadow-2xl overflow-hidden">
             <CardContent className="p-4">
-              <div className="relative bg-secondary/80 rounded-lg p-2">
-                <div className="grid grid-cols-4 gap-2">
-                  {grid.flat().map((value, index) => (
-                    <div
-                      key={index}
-                      className={`aspect-square rounded-lg flex items-center justify-center font-bold text-lg sm:text-xl transition-all duration-100 ${getTileColor(value)}`}
-                    >
-                      {value}
-                    </div>
-                  ))}
+              <div 
+                ref={gameContainerRef}
+                className="relative rounded-xl p-3"
+                style={{
+                  background: 'linear-gradient(145deg, #bbada0 0%, #a89888 100%)',
+                  boxShadow: 'inset 0 -4px 0 rgba(0,0,0,0.1), 0 10px 30px rgba(0,0,0,0.3)',
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              >
+                <div className="grid grid-cols-4 gap-3">
+                  {grid.flat().map((value, index) => {
+                    const style = getTileStyle(value);
+                    return (
+                      <div
+                        key={index}
+                        className="aspect-square rounded-lg flex items-center justify-center font-bold transition-all duration-100 transform"
+                        style={{
+                          background: style.bg,
+                          color: style.text,
+                          fontSize: value && value >= 1000 ? '1.25rem' : value && value >= 100 ? '1.5rem' : '1.75rem',
+                          boxShadow: value ? `0 4px 0 rgba(0,0,0,0.15), 0 6px 20px ${style.shadow}` : 'none',
+                          transform: value ? 'translateY(-2px)' : 'none',
+                        }}
+                      >
+                        {value}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Game Over Overlay */}
                 {gameOver && (
-                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-lg">
-                    <div className="text-center">
-                      <p className="text-xl font-bold text-destructive mb-2">Game Over!</p>
-                      <p className="text-muted-foreground mb-4">Score: {score}</p>
-                      <Button onClick={resetGame}>Try Again</Button>
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center rounded-xl">
+                    <div className="text-center p-6 rounded-2xl bg-background/95 shadow-2xl animate-scale-in">
+                      <p className="text-2xl font-bold text-destructive mb-2">Game Over!</p>
+                      <p className="text-foreground text-lg mb-4">Score: {score}</p>
+                      <Button onClick={resetGame} className="shadow-lg">Try Again</Button>
                     </div>
                   </div>
                 )}
 
                 {/* Won Overlay */}
                 {won && !gameOver && (
-                  <div className="absolute inset-0 bg-yellow-500/80 flex items-center justify-center rounded-lg">
-                    <div className="text-center">
-                      <p className="text-xl font-bold text-white mb-2">🎉 You Won!</p>
-                      <p className="text-white/90 mb-4">Score: {score}</p>
-                      <div className="flex gap-2 justify-center">
+                  <div className="absolute inset-0 bg-yellow-500/80 backdrop-blur-sm flex items-center justify-center rounded-xl">
+                    <div className="text-center p-6 rounded-2xl bg-background/95 shadow-2xl animate-scale-in">
+                      <p className="text-2xl font-bold text-yellow-600 mb-2">🎉 You Won!</p>
+                      <p className="text-foreground mb-4">Score: {score}</p>
+                      <div className="flex gap-3 justify-center">
                         <Button onClick={() => setWon(false)} variant="secondary">Keep Playing</Button>
                         <Button onClick={resetGame}>New Game</Button>
                       </div>
@@ -293,42 +366,42 @@ const Game2048 = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12"
+                  className="h-14 w-14 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 bg-gradient-to-b from-secondary to-secondary/80"
                   onClick={() => handleMove('up')}
                 >
-                  <ArrowUp className="w-6 h-6" />
+                  <ArrowUp className="w-7 h-7" />
                 </Button>
                 <div />
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12"
+                  className="h-14 w-14 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 bg-gradient-to-b from-secondary to-secondary/80"
                   onClick={() => handleMove('left')}
                 >
-                  <ArrowLeftIcon className="w-6 h-6" />
+                  <ArrowLeftIcon className="w-7 h-7" />
                 </Button>
-                <div className="h-12 w-12" />
+                <div className="h-14 w-14" />
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12"
+                  className="h-14 w-14 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 bg-gradient-to-b from-secondary to-secondary/80"
                   onClick={() => handleMove('right')}
                 >
-                  <ArrowRight className="w-6 h-6" />
+                  <ArrowRight className="w-7 h-7" />
                 </Button>
                 <div />
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12"
+                  className="h-14 w-14 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 bg-gradient-to-b from-secondary to-secondary/80"
                   onClick={() => handleMove('down')}
                 >
-                  <ArrowDown className="w-6 h-6" />
+                  <ArrowDown className="w-7 h-7" />
                 </Button>
                 <div />
               </div>
               <p className="text-xs text-center text-muted-foreground mt-4">
-                Use arrow keys or tap buttons
+                Swipe on board, use arrow keys, or WASD
               </p>
             </CardContent>
           </Card>

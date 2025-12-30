@@ -125,28 +125,34 @@ const SnakeGame = () => {
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isPlaying) return;
+      if (!isPlaying && !gameOver && (e.key.startsWith('Arrow') || ['w', 'a', 's', 'd'].includes(e.key.toLowerCase()))) {
+        startGame();
+      }
       
-      switch (e.key) {
-        case 'ArrowUp':
+      switch (e.key.toLowerCase()) {
+        case 'arrowup':
+        case 'w':
           if (directionRef.current !== 'DOWN') {
             directionRef.current = 'UP';
             setDirection('UP');
           }
           break;
-        case 'ArrowDown':
+        case 'arrowdown':
+        case 's':
           if (directionRef.current !== 'UP') {
             directionRef.current = 'DOWN';
             setDirection('DOWN');
           }
           break;
-        case 'ArrowLeft':
+        case 'arrowleft':
+        case 'a':
           if (directionRef.current !== 'RIGHT') {
             directionRef.current = 'LEFT';
             setDirection('LEFT');
           }
           break;
-        case 'ArrowRight':
+        case 'arrowright':
+        case 'd':
           if (directionRef.current !== 'LEFT') {
             directionRef.current = 'RIGHT';
             setDirection('RIGHT');
@@ -157,11 +163,13 @@ const SnakeGame = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPlaying]);
+  }, [isPlaying, gameOver]);
 
   // Touch controls
   const handleDirectionChange = (newDirection: Direction) => {
-    if (!isPlaying) return;
+    if (!isPlaying) {
+      startGame();
+    }
     
     const opposites: Record<Direction, Direction> = {
       UP: 'DOWN',
@@ -204,70 +212,145 @@ const SnakeGame = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto space-y-6">
           {/* Score Display */}
-          <div className="flex justify-between items-center">
-            <Card className="glass-card border-border/30 flex-1 mr-2">
+          <div className="flex justify-between items-center gap-4">
+            <Card className="glass-card border-border/30 flex-1 transform hover:scale-105 transition-transform duration-300">
               <CardContent className="p-4 text-center">
                 <p className="text-xs text-muted-foreground">Score</p>
-                <p className="text-2xl font-bold text-primary">{score}</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">{score}</p>
               </CardContent>
             </Card>
-            <Card className="glass-card border-border/30 flex-1 ml-2">
+            <Card className="glass-card border-border/30 flex-1 transform hover:scale-105 transition-transform duration-300">
               <CardContent className="p-4 text-center">
                 <p className="text-xs text-muted-foreground">High Score</p>
-                <p className="text-2xl font-bold text-yellow-500">{highScore}</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">{highScore}</p>
               </CardContent>
             </Card>
           </div>
 
           {/* Game Board */}
-          <Card className="glass-card border-border/30">
+          <Card className="glass-card border-border/30 shadow-2xl overflow-hidden">
             <CardContent className="p-4">
               <div 
-                className="relative mx-auto bg-secondary/50 rounded-lg border-2 border-border/50"
+                className="relative mx-auto rounded-xl overflow-hidden"
                 style={{ 
                   width: GRID_SIZE * CELL_SIZE, 
-                  height: GRID_SIZE * CELL_SIZE 
+                  height: GRID_SIZE * CELL_SIZE,
+                  background: 'linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+                  boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.5)',
                 }}
               >
+                {/* Grid pattern */}
+                <div 
+                  className="absolute inset-0 opacity-10"
+                  style={{
+                    backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
+                    backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+                  }}
+                />
+
                 {/* Snake */}
-                {snake.map((segment, index) => (
-                  <div
-                    key={index}
-                    className={`absolute rounded-sm ${index === 0 ? 'bg-primary' : 'bg-primary/70'}`}
-                    style={{
-                      left: segment.x * CELL_SIZE,
-                      top: segment.y * CELL_SIZE,
-                      width: CELL_SIZE - 1,
-                      height: CELL_SIZE - 1,
-                    }}
-                  />
-                ))}
+                {snake.map((segment, index) => {
+                  const isHead = index === 0;
+                  const isTail = index === snake.length - 1;
+                  return (
+                    <div
+                      key={index}
+                      className="absolute transition-all duration-75"
+                      style={{
+                        left: segment.x * CELL_SIZE,
+                        top: segment.y * CELL_SIZE,
+                        width: CELL_SIZE - 1,
+                        height: CELL_SIZE - 1,
+                        background: isHead 
+                          ? 'linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)' 
+                          : `linear-gradient(135deg, hsl(${140 - index * 3}, 80%, ${55 - index}%) 0%, hsl(${140 - index * 3}, 70%, ${45 - index}%) 100%)`,
+                        borderRadius: isHead ? '6px' : isTail ? '4px' : '3px',
+                        boxShadow: isHead 
+                          ? '0 0 15px rgba(0, 255, 136, 0.6), 0 0 30px rgba(0, 255, 136, 0.3)' 
+                          : '0 2px 4px rgba(0,0,0,0.3)',
+                        transform: isHead ? 'scale(1.1)' : 'scale(1)',
+                      }}
+                    >
+                      {isHead && (
+                        <>
+                          {/* Eyes */}
+                          <div 
+                            className="absolute bg-white rounded-full"
+                            style={{
+                              width: 4,
+                              height: 4,
+                              top: 3,
+                              left: direction === 'LEFT' ? 2 : direction === 'RIGHT' ? 8 : 3,
+                            }}
+                          >
+                            <div className="absolute bg-black rounded-full" style={{ width: 2, height: 2, top: 1, left: 1 }} />
+                          </div>
+                          <div 
+                            className="absolute bg-white rounded-full"
+                            style={{
+                              width: 4,
+                              height: 4,
+                              top: 3,
+                              left: direction === 'LEFT' ? 8 : direction === 'RIGHT' ? 2 : 9,
+                            }}
+                          >
+                            <div className="absolute bg-black rounded-full" style={{ width: 2, height: 2, top: 1, left: 1 }} />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
                 
                 {/* Food */}
                 <div
-                  className="absolute bg-red-500 rounded-full animate-pulse"
+                  className="absolute animate-pulse"
                   style={{
                     left: food.x * CELL_SIZE,
                     top: food.y * CELL_SIZE,
                     width: CELL_SIZE - 1,
                     height: CELL_SIZE - 1,
+                    background: 'radial-gradient(circle, #ff6b6b 0%, #ee5a5a 50%, #c0392b 100%)',
+                    borderRadius: '50%',
+                    boxShadow: '0 0 15px rgba(255, 107, 107, 0.8), 0 0 30px rgba(255, 107, 107, 0.4)',
                   }}
-                />
+                >
+                  {/* Apple stem */}
+                  <div 
+                    className="absolute bg-green-600 rounded"
+                    style={{
+                      width: 2,
+                      height: 4,
+                      top: -2,
+                      left: '50%',
+                      transform: 'translateX(-50%) rotate(15deg)',
+                    }}
+                  />
+                </div>
 
                 {/* Game Over Overlay */}
                 {gameOver && (
-                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-lg">
-                    <div className="text-center">
-                      <p className="text-xl font-bold text-destructive mb-2">Game Over!</p>
-                      <p className="text-muted-foreground">Score: {score}</p>
+                  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center rounded-lg">
+                    <div className="text-center p-4 rounded-xl bg-background/90 shadow-2xl animate-scale-in">
+                      <p className="text-2xl font-bold text-destructive mb-2">Game Over!</p>
+                      <p className="text-foreground text-lg">Score: {score}</p>
+                      {score === highScore && score > 0 && (
+                        <p className="text-primary font-semibold mt-1 animate-pulse">🎉 New High Score!</p>
+                      )}
                     </div>
                   </div>
                 )}
 
                 {/* Start Overlay */}
                 {!isPlaying && !gameOver && (
-                  <div className="absolute inset-0 bg-background/60 flex items-center justify-center rounded-lg">
-                    <p className="text-muted-foreground">Press Play to start</p>
+                  <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center rounded-lg">
+                    <div className="text-center">
+                      <p className="text-xl font-bold text-foreground mb-2">🐍 Snake</p>
+                      <p className="text-muted-foreground text-sm">Press arrow keys or WASD</p>
+                      <div className="mt-3 animate-bounce">
+                        <Play className="w-8 h-8 mx-auto text-primary" />
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -280,7 +363,7 @@ const SnakeGame = () => {
             <div className="flex gap-4 justify-center">
               <Button 
                 onClick={startGame}
-                className="gap-2"
+                className="gap-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 size="lg"
               >
                 <Play className="w-5 h-5" />
@@ -290,7 +373,7 @@ const SnakeGame = () => {
                 onClick={resetGame}
                 variant="outline"
                 size="lg"
-                className="gap-2"
+                className="gap-2 hover:scale-105 transition-transform duration-300"
               >
                 <RotateCcw className="w-5 h-5" />
                 Reset
@@ -300,7 +383,7 @@ const SnakeGame = () => {
             {/* Direction Pad (for mobile) */}
             <Card className="glass-card border-border/30">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-center text-muted-foreground">Controls</CardTitle>
+                <CardTitle className="text-sm text-center text-muted-foreground">Touch Controls</CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
                 <div className="grid grid-cols-3 gap-2 max-w-[180px] mx-auto">
@@ -308,46 +391,46 @@ const SnakeGame = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12"
+                    className="h-14 w-14 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 bg-gradient-to-b from-secondary to-secondary/80"
                     onTouchStart={() => handleDirectionChange('UP')}
                     onClick={() => handleDirectionChange('UP')}
                   >
-                    <ArrowUp className="w-6 h-6" />
+                    <ArrowUp className="w-7 h-7" />
                   </Button>
                   <div />
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12"
+                    className="h-14 w-14 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 bg-gradient-to-b from-secondary to-secondary/80"
                     onTouchStart={() => handleDirectionChange('LEFT')}
                     onClick={() => handleDirectionChange('LEFT')}
                   >
-                    <ArrowLeftIcon className="w-6 h-6" />
+                    <ArrowLeftIcon className="w-7 h-7" />
                   </Button>
-                  <div className="h-12 w-12" />
+                  <div className="h-14 w-14" />
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12"
+                    className="h-14 w-14 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 bg-gradient-to-b from-secondary to-secondary/80"
                     onTouchStart={() => handleDirectionChange('RIGHT')}
                     onClick={() => handleDirectionChange('RIGHT')}
                   >
-                    <ArrowRight className="w-6 h-6" />
+                    <ArrowRight className="w-7 h-7" />
                   </Button>
                   <div />
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12"
+                    className="h-14 w-14 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 bg-gradient-to-b from-secondary to-secondary/80"
                     onTouchStart={() => handleDirectionChange('DOWN')}
                     onClick={() => handleDirectionChange('DOWN')}
                   >
-                    <ArrowDown className="w-6 h-6" />
+                    <ArrowDown className="w-7 h-7" />
                   </Button>
                   <div />
                 </div>
                 <p className="text-xs text-center text-muted-foreground mt-4">
-                  Use arrow keys or tap buttons to control
+                  Keyboard: Arrow keys or WASD
                 </p>
               </CardContent>
             </Card>
