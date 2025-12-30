@@ -18,6 +18,7 @@ import Calculator from "./pages/Calculator";
 import Games from "./pages/Games";
 import SnakeGame from "./pages/SnakeGame";
 import FlappyBirdGame from "./pages/FlappyBirdGame";
+import Game2048 from "./pages/Game2048";
 import DailyQuiz from "./pages/DailyQuiz";
 import Timetable from "./pages/Timetable";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
                 <Route path="/games" element={<Games />} />
                 <Route path="/games/snake" element={<SnakeGame />} />
                 <Route path="/games/flappy-bird" element={<FlappyBirdGame />} />
+                <Route path="/games/2048" element={<Game2048 />} />
                 <Route path="/quiz" element={<DailyQuiz />} />
                 <Route element={<DashboardLayout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
