@@ -25,7 +25,8 @@ import {
   BookOpen,
   ClipboardList,
   Pencil,
-  Trash2
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -399,9 +400,22 @@ const Subject = () => {
             </div>
             <p className="text-muted-foreground">{subject.description}</p>
           </div>
-          <Badge className="w-fit bg-primary/10 text-primary border-0 rounded-lg">
-            {subject.semester} Semester
-          </Badge>
+          <div className="flex items-center gap-3">
+            {subject.code === 'BCS302' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 rounded-xl bg-gradient-to-r from-orange-500/10 to-yellow-500/10 border-orange-500/30 hover:border-orange-500/50 text-orange-600 dark:text-orange-400"
+                onClick={() => window.open('https://notebooklm.google.com/notebook/14db72fc-a8e2-4690-8f32-0aafee30ef3e', '_blank')}
+              >
+                <ExternalLink className="w-4 h-4" />
+                NotebookLM
+              </Button>
+            )}
+            <Badge className="w-fit bg-primary/10 text-primary border-0 rounded-lg">
+              {subject.semester} Semester
+            </Badge>
+          </div>
         </div>
       </div>
 
