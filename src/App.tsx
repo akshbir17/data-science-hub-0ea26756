@@ -21,6 +21,7 @@ import FlappyBirdGame from "./pages/FlappyBirdGame";
 import Game2048 from "./pages/Game2048";
 import DailyQuiz from "./pages/DailyQuiz";
 import Timetable from "./pages/Timetable";
+import ExamDates from "./pages/ExamDates";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -49,6 +50,7 @@ const App = () => (
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/subject/:id" element={<Subject />} />
                   <Route path="/timetable" element={<Timetable />} />
+                  <Route path="/exam-dates" element={<ExamDates />} />
                   <Route path="/admin/upload" element={<AdminUpload />} />
                   <Route path="/admin/panel" element={<AdminPanel />} />
                 </Route>

@@ -92,7 +92,7 @@ const slideLeft = (grid: Grid): { grid: Grid; score: number; moved: boolean } =>
 };
 
 const move = (grid: Grid, direction: 'left' | 'right' | 'up' | 'down'): { grid: Grid; score: number; moved: boolean } => {
-  const rotations: Record<string, number> = { left: 0, up: 1, right: 2, down: 3 };
+  const rotations: Record<string, number> = { left: 0, up: 3, right: 2, down: 1 };
   const rotation = rotations[direction];
   
   let rotatedGrid = rotateGrid(grid, rotation);
