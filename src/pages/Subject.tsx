@@ -404,16 +404,72 @@ const Subject = () => {
             </div>
             <p className="text-muted-foreground">{subject.description}</p>
           </div>
-          <div className="flex items-center gap-3">
-            {subject.code === 'BCS302' && (
+          <div className="flex flex-wrap items-center gap-3">
+            {/* TakeItEasy Notes Links */}
+            {subject.code === 'BCS301' && (
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 rounded-xl bg-gradient-to-r from-orange-500/10 to-yellow-500/10 border-orange-500/30 hover:border-orange-500/50 text-orange-600 dark:text-orange-400"
-                onClick={() => window.open('https://notebooklm.google.com/notebook/14db72fc-a8e2-4690-8f32-0aafee30ef3e', '_blank')}
+                className="gap-2 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30 hover:border-blue-500/50 text-blue-600 dark:text-blue-400"
+                onClick={() => window.open('https://takeiteasyengineers.com/category/bcs301-m3-cse/', '_blank')}
               >
                 <ExternalLink className="w-4 h-4" />
-                NotebookLM
+                TakeItEasy Notes
+              </Button>
+            )}
+            {subject.code === 'BCS302' && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30 hover:border-blue-500/50 text-blue-600 dark:text-blue-400"
+                  onClick={() => window.open('https://takeiteasyengineers.com/category/bcs302-m3-cse/', '_blank')}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  TakeItEasy Notes
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 rounded-xl bg-gradient-to-r from-orange-500/10 to-yellow-500/10 border-orange-500/30 hover:border-orange-500/50 text-orange-600 dark:text-orange-400"
+                  onClick={() => window.open('https://notebooklm.google.com/notebook/14db72fc-a8e2-4690-8f32-0aafee30ef3e', '_blank')}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  NotebookLM
+                </Button>
+              </>
+            )}
+            {subject.code === 'BCS303' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30 hover:border-blue-500/50 text-blue-600 dark:text-blue-400"
+                onClick={() => window.open('https://takeiteasyengineers.com/category/bcs303-m3-cse/', '_blank')}
+              >
+                <ExternalLink className="w-4 h-4" />
+                TakeItEasy Notes
+              </Button>
+            )}
+            {subject.code === 'BCS304' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30 hover:border-blue-500/50 text-blue-600 dark:text-blue-400"
+                onClick={() => window.open('https://takeiteasyengineers.com/category/bcs304-m3-cse/', '_blank')}
+              >
+                <ExternalLink className="w-4 h-4" />
+                TakeItEasy Notes
+              </Button>
+            )}
+            {subject.code === 'BDS306C' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30 hover:border-blue-500/50 text-blue-600 dark:text-blue-400"
+                onClick={() => window.open('https://takeiteasyengineers.com/category/bcs306b-m3-cse/', '_blank')}
+              >
+                <ExternalLink className="w-4 h-4" />
+                TakeItEasy Notes
               </Button>
             )}
             <Badge className="w-fit bg-primary/10 text-primary border-0 rounded-lg">
