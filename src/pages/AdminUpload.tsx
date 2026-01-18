@@ -21,7 +21,8 @@ import {
   BookOpen,
   ClipboardList,
   Trash2,
-  FolderOpen
+  FolderOpen,
+  Star
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -238,7 +239,7 @@ const AdminUpload = () => {
 
       toast({
         title: 'Upload Successful',
-        description: `${resourceType === 'pyq' ? 'Past year question paper' : 'Study material'} has been uploaded.`,
+        description: `${resourceType === 'pyq' ? 'Past year question paper' : resourceType === 'important' ? 'Important note' : 'Study material'} has been uploaded.`,
       });
 
       setSemester('');
@@ -336,11 +337,11 @@ const AdminUpload = () => {
                   <RadioGroup
                     value={resourceType}
                     onValueChange={setResourceType}
-                    className="grid grid-cols-2 gap-4"
+                    className="grid grid-cols-3 gap-4"
                   >
                     <Label
                       htmlFor="material"
-                      className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-apple ${
+                      className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-apple ${
                         resourceType === 'material'
                           ? 'border-primary bg-primary/5'
                           : 'border-border hover:border-primary/50'
@@ -352,14 +353,14 @@ const AdminUpload = () => {
                       }`}>
                         <BookOpen className={`w-5 h-5 ${resourceType === 'material' ? 'text-primary' : 'text-muted-foreground'}`} />
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">Study Material</p>
-                        <p className="text-xs text-muted-foreground">Notes, modules, slides</p>
+                      <div className="text-center">
+                        <p className="font-medium text-foreground text-sm">Study Material</p>
+                        <p className="text-xs text-muted-foreground">Notes, modules</p>
                       </div>
                     </Label>
                     <Label
                       htmlFor="pyq"
-                      className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-apple ${
+                      className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-apple ${
                         resourceType === 'pyq'
                           ? 'border-primary bg-primary/5'
                           : 'border-border hover:border-primary/50'
@@ -371,9 +372,28 @@ const AdminUpload = () => {
                       }`}>
                         <ClipboardList className={`w-5 h-5 ${resourceType === 'pyq' ? 'text-primary' : 'text-muted-foreground'}`} />
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">Past Year Question</p>
-                        <p className="text-xs text-muted-foreground">Previous exam papers</p>
+                      <div className="text-center">
+                        <p className="font-medium text-foreground text-sm">Past Year Q</p>
+                        <p className="text-xs text-muted-foreground">Exam papers</p>
+                      </div>
+                    </Label>
+                    <Label
+                      htmlFor="important"
+                      className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-apple ${
+                        resourceType === 'important'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <RadioGroupItem value="important" id="important" className="sr-only" />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        resourceType === 'important' ? 'bg-primary/10' : 'bg-secondary'
+                      }`}>
+                        <Star className={`w-5 h-5 ${resourceType === 'important' ? 'text-primary' : 'text-muted-foreground'}`} />
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium text-foreground text-sm">Important</p>
+                        <p className="text-xs text-muted-foreground">Key notes</p>
                       </div>
                     </Label>
                   </RadioGroup>
