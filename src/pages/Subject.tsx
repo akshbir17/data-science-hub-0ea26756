@@ -26,7 +26,8 @@ import {
   ClipboardList,
   Pencil,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  Star
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -268,6 +269,7 @@ const Subject = () => {
 
   const materials = resources.filter(r => r.resource_type === 'material').sort(sortByTitle);
   const pyqs = resources.filter(r => r.resource_type === 'pyq').sort(sortByTitle);
+  const importantNotes = resources.filter(r => r.resource_type === 'important').sort(sortByTitle);
 
   const ResourceCard = ({ resource, index }: { resource: Resource; index: number }) => (
     <Card 
@@ -348,15 +350,17 @@ const Subject = () => {
     </Card>
   );
 
-  const EmptyState = ({ type }: { type: 'material' | 'pyq' }) => (
+  const EmptyState = ({ type }: { type: 'material' | 'pyq' | 'important' }) => (
     <div className="p-12 text-center rounded-3xl border-2 border-dashed border-border bg-secondary/20">
       <FolderOpen className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
       <h3 className="font-semibold text-foreground mb-2">
-        No {type === 'pyq' ? 'Past Year Questions' : 'Study Materials'} Yet
+        No {type === 'pyq' ? 'Past Year Questions' : type === 'important' ? 'Important Notes' : 'Study Materials'} Yet
       </h3>
       <p className="text-muted-foreground text-sm max-w-sm mx-auto">
         {type === 'pyq' 
           ? 'Past year question papers will be uploaded soon. Check back later!'
+          : type === 'important'
+          ? 'Important notes and external resources will be uploaded soon. Check back later!'
           : 'Study materials haven\'t been uploaded yet. Check back later or contact your administrator.'}
       </p>
     </div>
@@ -448,6 +452,19 @@ const Subject = () => {
               </Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger
+            value="important"
+            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-apple-sm gap-2 px-4"
+          >
+            <Star className="w-4 h-4" />
+            <span className="hidden sm:inline">Important Notes</span>
+            <span className="sm:hidden">Important</span>
+            {importantNotes.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs rounded-md">
+                {importantNotes.length}
+              </Badge>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="materials" className="space-y-4 animate-fade-in">
@@ -467,6 +484,16 @@ const Subject = () => {
             ))
           ) : (
             <EmptyState type="pyq" />
+          )}
+        </TabsContent>
+
+        <TabsContent value="important" className="space-y-4 animate-fade-in">
+          {importantNotes.length > 0 ? (
+            importantNotes.map((resource, index) => (
+              <ResourceCard key={resource.id} resource={resource} index={index} />
+            ))
+          ) : (
+            <EmptyState type="important" />
           )}
         </TabsContent>
 
