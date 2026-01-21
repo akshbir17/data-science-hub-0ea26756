@@ -14,6 +14,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
   ArrowLeft, 
   Download, 
@@ -27,7 +33,8 @@ import {
   Pencil,
   Trash2,
   ExternalLink,
-  Star
+  Star,
+  MoveRight
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -271,6 +278,40 @@ const Subject = () => {
   const pyqs = resources.filter(r => r.resource_type === 'pyq').sort(sortByTitle);
   const importantNotes = resources.filter(r => r.resource_type === 'important').sort(sortByTitle);
 
+  const handleMoveResource = async (resource: Resource, newType: string) => {
+    if (resource.resource_type === newType) return;
+    
+    try {
+      const { error } = await supabase
+        .from('resources')
+        .update({ resource_type: newType })
+        .eq('id', resource.id);
+
+      if (error) throw error;
+
+      setResources(prev => 
+        prev.map(r => 
+          r.id === resource.id 
+            ? { ...r, resource_type: newType }
+            : r
+        )
+      );
+      
+      // Invalidate cache
+      invalidateCache(`subject_${id}`);
+      
+      const typeLabels: Record<string, string> = {
+        material: 'Study Materials',
+        pyq: 'Past Year Questions',
+        important: 'Important Notes'
+      };
+      toast.success(`Moved to ${typeLabels[newType]}`);
+    } catch (error) {
+      console.error('Error moving resource:', error);
+      toast.error('Failed to move resource');
+    }
+  };
+
   const ResourceCard = ({ resource, index }: { resource: Resource; index: number }) => (
     <Card 
       className="group hover:shadow-apple-lg transition-apple animate-fade-in-up border-0 bg-card rounded-2xl shadow-apple-sm"
@@ -304,9 +345,47 @@ const Subject = () => {
             </div>
           </div>
 
-          <div className="flex gap-2 shrink-0">
+          <div className="flex flex-wrap gap-2 shrink-0">
             {isAdmin && (
               <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-2 rounded-xl"
+                    >
+                      <MoveRight className="w-4 h-4" />
+                      Move
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      onClick={() => handleMoveResource(resource, 'material')}
+                      disabled={resource.resource_type === 'material'}
+                      className="gap-2"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      Study Materials
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleMoveResource(resource, 'pyq')}
+                      disabled={resource.resource_type === 'pyq'}
+                      className="gap-2"
+                    >
+                      <ClipboardList className="w-4 h-4" />
+                      Past Year Questions
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleMoveResource(resource, 'important')}
+                      disabled={resource.resource_type === 'important'}
+                      className="gap-2"
+                    >
+                      <Star className="w-4 h-4" />
+                      Important Notes
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   variant="ghost"
                   size="sm"
