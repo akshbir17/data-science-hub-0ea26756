@@ -2,6 +2,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Stars, MeshDistortMaterial, Sparkles } from '@react-three/drei';
 import { Suspense, useRef, useEffect, useState } from 'react';
 import type { Mesh, Group } from 'three';
+import HeroSceneLoader from './HeroSceneLoader';
 
 interface ScrollProps {
   scrollProgress: number;
@@ -183,14 +184,14 @@ const HeroScene = () => {
 
   return (
     <div className="absolute inset-0 z-0">
-      <Canvas
-        camera={{ position: [0, 0, 6], fov: 75 }}
-        style={{ background: 'transparent' }}
-      >
-        <Suspense fallback={null}>
+      <Suspense fallback={<HeroSceneLoader />}>
+        <Canvas
+          camera={{ position: [0, 0, 6], fov: 75 }}
+          style={{ background: 'transparent' }}
+        >
           <SceneContent scrollProgress={scrollProgress} />
-        </Suspense>
-      </Canvas>
+        </Canvas>
+      </Suspense>
     </div>
   );
 };
