@@ -1,14 +1,14 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Stars, MeshDistortMaterial, Sparkles } from '@react-three/drei';
 import { Suspense, useRef, useEffect, useState } from 'react';
-import * as THREE from 'three';
+import type { Mesh, Group } from 'three';
 
 interface ScrollProps {
   scrollProgress: number;
 }
 
 const FloatingCrystal = ({ position, scale = 1, speed = 1, scrollProgress }: { position: [number, number, number]; scale?: number; speed?: number; scrollProgress: number }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -40,7 +40,7 @@ const FloatingCrystal = ({ position, scale = 1, speed = 1, scrollProgress }: { p
 };
 
 const GlowingSphere = ({ position, color = "#7c3aed", scrollProgress }: { position: [number, number, number]; color?: string; scrollProgress: number }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -69,8 +69,8 @@ const GlowingSphere = ({ position, color = "#7c3aed", scrollProgress }: { positi
 };
 
 const TorusKnot = ({ scrollProgress }: ScrollProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const groupRef = useRef<THREE.Group>(null);
+  const meshRef = useRef<Mesh>(null);
+  const groupRef = useRef<Group>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
