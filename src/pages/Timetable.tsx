@@ -106,6 +106,17 @@ const getSubjectColor = (subject: string) => {
   return subjectColors[subject] || 'bg-secondary text-muted-foreground border-border';
 };
 
+const periods = [
+  { period: 1, time: '9:00 - 10:00' },
+  { period: 2, time: '10:00 - 11:00' },
+  { period: 3, time: '11:00 - 12:00' },
+  { period: 4, time: '12:00 - 1:00' },
+  { period: 'L', time: '1:00 - 2:00' },
+  { period: 5, time: '2:00 - 3:00' },
+  { period: 6, time: '3:00 - 4:00' },
+  { period: 7, time: '4:00 - 5:00' },
+];
+
 const getCurrentDay = () => {
   const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   return days[new Date().getDay()];
