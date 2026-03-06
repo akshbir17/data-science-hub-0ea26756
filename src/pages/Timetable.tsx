@@ -18,77 +18,93 @@ const timetableData: DaySchedule[] = [
   {
     day: 'MON',
     slots: [
-      { subject: 'OS', room: '327', teacher: 'ZM' },
-      { subject: 'DDCO', room: '327', teacher: 'VD' },
-      { subject: 'DSA', room: '327', teacher: 'HP' },
-      { subject: 'M3', room: '327', teacher: 'PP' },
+      { subject: 'DMS', room: '328', teacher: 'PP' },
+      { subject: 'ADA', room: '328', teacher: 'MK' },
+      { subject: 'DBMS', room: '328', teacher: 'MN' },
+      { subject: 'MC', room: '328', teacher: 'VD' },
       null, // Lunch
-      { subject: 'R Lab', room: 'Bot Lab', teacher: 'RG' },
-      { subject: 'DSA', room: '327', teacher: 'HP' },
+      { subject: 'Julia Lab', room: 'Bot Lab', teacher: 'RG' },
+      { subject: 'UHV', room: '328', teacher: 'ZM' },
     ],
   },
   {
     day: 'TUE',
     slots: [
-      { subject: 'DAR', room: '327', teacher: 'RG' },
-      { subject: 'M3', room: '327', teacher: 'PP' },
-      { subject: 'OS', room: '327', teacher: 'ZM' },
-      { subject: 'DDCO', room: '327', teacher: 'VD' },
+      { subject: 'ADA', room: '328', teacher: 'MK' },
+      { subject: 'MC', room: '328', teacher: 'VD' },
+      { subject: 'BCE', room: '328', teacher: 'HP' },
+      { subject: 'DBMS', room: '328', teacher: 'MN' },
       null, // Lunch
-      { subject: 'DDCO Lab', room: 'Bot Lab', teacher: 'MN' },
-      { subject: 'M3', room: '327', teacher: 'PP' },
+      null,
+      null,
     ],
   },
   {
     day: 'WED',
     slots: [
-      { subject: 'PHP Lab', room: 'Bot Lab', teacher: 'ZM' },
-      { subject: 'M3', room: '327', teacher: 'PP' },
-      { subject: 'OS', room: '327', teacher: 'ZM' },
-      null,
+      { subject: 'DMS', room: '328', teacher: 'PP' },
+      { subject: 'BCE', room: '328', teacher: 'HP' },
+      { subject: 'ADA', room: '328', teacher: 'MK' },
+      { subject: 'MC', room: '328', teacher: 'VD' },
       null, // Lunch
-      { subject: 'DDCO', room: '327', teacher: 'VD' },
-      { subject: 'DAR', room: '327', teacher: 'RG' },
-      { subject: 'DSA', room: '327', teacher: 'HP' },
+      null,
+      null,
     ],
   },
   {
     day: 'THU',
     slots: [
-      { subject: 'DDCO', room: '327', teacher: 'VD' },
-      { subject: 'M3', room: '327', teacher: 'PP' },
-      { subject: 'DAR', room: '327', teacher: 'RG' },
-      { subject: 'OS', room: '327', teacher: 'ZM' },
-      null, // Lunch
-      { subject: 'DSA', room: '327', teacher: 'HP' },
-      { subject: 'OS Lab', room: 'Bot Lab', teacher: 'ZM' },
+      { subject: 'MC', room: '328', teacher: 'VD' },
+      { subject: 'DMS', room: '328', teacher: 'PP' },
+      { subject: 'ADA Lab', room: 'Bot Lab', teacher: 'MK' },
+      null,
+      null, // Lunch (Break)
+      null,
+      null,
     ],
   },
   {
     day: 'FRI',
     slots: [
-      { subject: 'DDCO', room: '327', teacher: 'VD' },
-      { subject: 'DSA', room: '327', teacher: 'HP' },
-      { subject: 'DAR', room: '327', teacher: 'RG' },
-      { subject: 'OS', room: '327', teacher: 'ZM' },
-      null, // Lunch
-      { subject: 'DSA Lab', room: 'Bot Lab', teacher: 'HP' },
-      { subject: 'SCR(UHV)', room: '327', teacher: 'ZM' },
+      { subject: 'DBMS', room: '328', teacher: 'MN' },
+      { subject: 'BCE', room: '328', teacher: 'HP' },
+      { subject: 'ADA', room: '328', teacher: 'MK' },
+      { subject: 'DBMS', room: '328', teacher: 'MN' },
+      null, // Lunch (Break)
+      { subject: 'MC Lab', room: 'Bot Lab', teacher: 'ZM' },
+      null,
     ],
   },
   {
     day: 'SAT',
     slots: [
-      { subject: 'Yoga/Sports/NSS', room: '' },
+      { subject: 'DBMS Lab', room: 'Bot Lab', teacher: 'SSA' },
       null,
-      null,
-      null,
+      { subject: 'DMS', room: '328', teacher: 'PP' },
+      { subject: 'ADA', room: '328', teacher: 'MK' },
       null, // Lunch
       null,
       null,
     ],
   },
 ];
+
+const subjectColors: Record<string, string> = {
+  'DMS': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  'ADA': 'bg-green-500/20 text-green-400 border-green-500/30',
+  'DBMS': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  'MC': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  'BCE': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+  'Julia Lab': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  'UHV': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  'ADA Lab': 'bg-green-500/20 text-green-400 border-green-500/30',
+  'MC Lab': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  'DBMS Lab': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+};
+
+const getSubjectColor = (subject: string) => {
+  return subjectColors[subject] || 'bg-secondary text-muted-foreground border-border';
+};
 
 const periods = [
   { period: 1, time: '9:00 - 10:00' },
@@ -100,25 +116,6 @@ const periods = [
   { period: 6, time: '3:00 - 4:00' },
   { period: 7, time: '4:00 - 5:00' },
 ];
-
-const subjectColors: Record<string, string> = {
-  'OS': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  'DDCO': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  'DSA': 'bg-green-500/20 text-green-400 border-green-500/30',
-  'M3': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  'DAR': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
-  'R Lab': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-  'DDCO Lab': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  'PHP Lab': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-  'OS Lab': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  'DSA Lab': 'bg-green-500/20 text-green-400 border-green-500/30',
-  'SCR(UHV)': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  'Yoga/Sports/NSS': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
-};
-
-const getSubjectColor = (subject: string) => {
-  return subjectColors[subject] || 'bg-secondary text-muted-foreground border-border';
-};
 
 const getCurrentDay = () => {
   const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -144,7 +141,7 @@ const Timetable = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Class Timetable</h1>
-              <p className="text-muted-foreground">3rd Semester - Data Science</p>
+              <p className="text-muted-foreground">4th Semester - Data Science</p>
             </div>
           </div>
           <Badge className="w-fit bg-primary/10 text-primary border-0 rounded-lg px-4 py-2">
