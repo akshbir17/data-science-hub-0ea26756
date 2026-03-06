@@ -141,7 +141,7 @@ const Timetable = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Class Timetable</h1>
-              <p className="text-muted-foreground">3rd Semester - Data Science</p>
+              <p className="text-muted-foreground">4th Semester - Data Science</p>
             </div>
           </div>
           <Badge className="w-fit bg-primary/10 text-primary border-0 rounded-lg px-4 py-2">
